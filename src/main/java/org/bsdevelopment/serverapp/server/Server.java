@@ -1,5 +1,6 @@
 package org.bsdevelopment.serverapp.server;
 
+import org.bsdevelopment.serverapp.ServerMasterApplication;
 import org.bsdevelopment.serverapp.server.error.ServerJarNotFoundException;
 
 import java.io.File;
@@ -37,6 +38,8 @@ public class Server {
     // Flag indicating whether the server is running
     private boolean running;
 
+    private final int port;
+
     /**
      * Constructs a new {@code Server} instance.
      *
@@ -52,6 +55,8 @@ public class Server {
         this.serverType = serverType;
         this.thread = thread;
         this.running = running;
+
+        port = Integer.parseInt(ServerMasterApplication.getProperties().getProperty("server-port", "25565"));
     }
 
     /**
@@ -74,22 +79,46 @@ public class Server {
         // Retrieve Java options for running the server
         List<String> options = getJavaOptions(path);
 
-        // Load or create the 'server.properties' file and update 'level-name'
-        Properties prop = new Properties();
-        File serverProp = new File(ServerWrapper.getInstance().getJarManager().getRepo(), "server.properties");
+        if (Boolean.parseBoolean(ServerMasterApplication.getProperties().getProperty("eula", "false"))) {
+            Properties properties = new Properties();
+            File file = new File(ServerWrapper.getInstance().getJarManager().getRepo(), "eula.txt");
 
-        if (!serverProp.createNewFile()) {
-            try {
-                prop.load(new FileInputStream(serverProp));
-            } catch (IOException e) {
-                log.log(Level.SEVERE, "Failed to fetch 'server.properties' file");
-                throw new RuntimeException(e);
+            if (!file.createNewFile()) {
+                try {
+                    properties.load(new FileInputStream(file));
+                } catch (IOException e) {
+                    log.log(Level.SEVERE, "Failed to fetch 'server.properties' file");
+                    throw new RuntimeException(e);
+                }
+            }else{
+                properties.setProperty("eula", "false");
+            }
+
+            if ("false".equalsIgnoreCase(properties.getProperty("eula"))) {
+                System.out.println("[ServerMaster] Setting EULA to true...");
+                properties.setProperty("eula", "true");
+                properties.store(new FileOutputStream(file), null);
             }
         }
 
-        System.out.println("[ServerMaster] Updating level-name to 'World_" + jar.getVersion() + "'");
-        prop.setProperty("level-name", "World_" + jar.getVersion());
-        prop.store(new FileOutputStream(serverProp), null);
+        {
+            // Load or create the 'server.properties' file and update 'level-name'
+            Properties prop = new Properties();
+            File serverProp = new File(ServerWrapper.getInstance().getJarManager().getRepo(), "server.properties");
+
+            if (!serverProp.createNewFile()) {
+                try {
+                    prop.load(new FileInputStream(serverProp));
+                } catch (IOException e) {
+                    log.log(Level.SEVERE, "Failed to fetch 'server.properties' file");
+                    throw new RuntimeException(e);
+                }
+            }
+
+            System.out.println("[ServerMaster] Updating level-name to 'World_" + jar.getVersion() + "'");
+            prop.setProperty("level-name", "World_" + jar.getVersion());
+            prop.store(new FileOutputStream(serverProp), null);
+        }
 
         // Create a ProcessBuilder for running the server
         ProcessBuilder pb = new ProcessBuilder(options);
@@ -131,6 +160,10 @@ public class Server {
         return this.running;
     }
 
+    public int getPort() {
+        return port;
+    }
+
     /**
      * Retrieves a list of Java options for running the server.
      *
@@ -140,15 +173,15 @@ public class Server {
     private List<String> getJavaOptions(String path) {
         List<String> options = new ArrayList<>();
         options.add("java");
-        options.add("-DIReallyKnowWhatIAmDoingISwear");
-        options.add("-Djline.terminal=jline.UnsupportedTerminal"); // Remove warning on Windows
-        options.add("-DserverName=" + name); // For use in the Bukkit plugin
-        options.add("-jar");
-        options.add(path);
         options.add("-Xms" + "1024M");
         options.add("-Xmx" + "1024M");
+        options.add("-DIReallyKnowWhatIAmDoingISwear");
+        options.add("-Djline.terminal=jline.UnsupportedTerminal"); // Remove warning on Windows
+        options.add("-DserverName=" + name);
+        options.add("-jar");
+        options.add(path);
         options.add("--port");
-        options.add("25565");
+        options.add(String.valueOf(port));
         options.add("-o");
         options.add("false");
         options.add("nogui");

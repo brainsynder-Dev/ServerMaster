@@ -11,54 +11,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <BorderPane prefHeight="400" prefWidth="600" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.bsdevelopment.serverapp.SettingsController">
-   <center>
-      <VBox alignment="TOP_CENTER" fillWidth="false" prefHeight="290.0" prefWidth="289.0" spacing="10.0" BorderPane.alignment="TOP_CENTER">
-         <padding>
-            <Insets top="40.0" />
-         </padding>
-         <HBox alignment="CENTER" fillHeight="false" prefWidth="600.0">
-            <Text fontSmoothingType="LCD" nodeOrientation="LEFT_TO_RIGHT" strokeType="OUTSIDE" strokeWidth="0.0" text="Server Port: " textOrigin="CENTER" wrappingWidth="101.74658203125">
-               <font>
-                  <Font name="Hack Regular" size="13.0" />
-               </font>
-               <cursor>
-                  <Cursor fx:constant="DEFAULT" />
-               </cursor>
-            </Text>
-            <TextField fx:id="serverPort" text="25565" />
-         </HBox>
-         <HBox alignment="CENTER" fillHeight="false" prefWidth="520.0">
-            <Text fontSmoothingType="LCD" nodeOrientation="LEFT_TO_RIGHT" strokeType="OUTSIDE" strokeWidth="0.0" text="App Theme: " textAlignment="RIGHT" textOrigin="CENTER" wrappingWidth="101.74658203125">
-               <font>
-                  <Font name="Hack Regular" size="13.0" />
-               </font>
-               <cursor>
-                  <Cursor fx:constant="DEFAULT" />
-               </cursor>
-            </Text>
-            <ChoiceBox fx:id="themeSelector" onInputMethodTextChanged="#updateTheme" prefWidth="150.0" />
-         </HBox>
-         <HBox alignment="CENTER" fillHeight="false" prefWidth="520.0">
-            <padding>
-               <Insets right="75.0" />
-            </padding>
-            <Text fontSmoothingType="LCD" nodeOrientation="LEFT_TO_RIGHT" strokeType="OUTSIDE" strokeWidth="0.0" text="Accept EULA: " textAlignment="RIGHT" textOrigin="CENTER" wrappingWidth="104.74658203125">
-               <font>
-                  <Font name="Hack Regular" size="13.0" />
-               </font>
-               <cursor>
-                  <Cursor fx:constant="DEFAULT" />
-               </cursor>
-            </Text>
-            <CheckBox fx:id="acceptEULA" mnemonicParsing="false" selected="true">
-               <padding>
-                  <Insets right="60.0" />
-               </padding></CheckBox>
-         </HBox>
-      </VBox>
-   </center>
    <bottom>
-      <HBox alignment="BASELINE_CENTER" prefHeight="42.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+      <HBox alignment="BASELINE_CENTER" prefHeight="62.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <Button fx:id="save" mnemonicParsing="false" onAction="#saveSettings" text="Save Settings" />
       </HBox>
    </bottom>
@@ -72,13 +26,84 @@
       </HBox>
    </top>
    <left>
-      <VBox alignment="BASELINE_CENTER" prefHeight="290.0" prefWidth="153.0" BorderPane.alignment="BOTTOM_CENTER">
-         <ImageView fitHeight="170.0" fitWidth="170.0" pickOnBounds="true" preserveRatio="true">
+      <VBox alignment="BASELINE_CENTER" prefHeight="270.0" prefWidth="181.0" BorderPane.alignment="BOTTOM_CENTER">
+         <ImageView fitHeight="155.0" fitWidth="152.0" pickOnBounds="true" preserveRatio="true">
             <Image url="@icon.png" />
          </ImageView>
       </VBox>
    </left>
    <right>
-      <Pane prefHeight="290.0" prefWidth="174.0" BorderPane.alignment="CENTER" />
+      <Pane prefHeight="270.0" prefWidth="154.0" BorderPane.alignment="CENTER">
+         <VBox alignment="TOP_CENTER" fillWidth="false" layoutX="23.0" prefHeight="290.0" prefWidth="266.0"
+               spacing="10.0">
+            <padding>
+               <Insets top="25.0"/>
+            </padding>
+            <HBox alignment="CENTER" fillHeight="false" prefWidth="600.0"/>
+            <HBox alignment="CENTER" fillHeight="false" prefWidth="520.0"/>
+            <HBox alignment="CENTER" fillHeight="false" prefWidth="520.0">
+               <padding>
+                  <Insets right="75.0"/>
+               </padding>
+            </HBox>
+         </VBox>
+      </Pane>
    </right>
+   <center>
+      <GridPane prefHeight="270.0" prefWidth="281.0" BorderPane.alignment="CENTER">
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="122.0" minWidth="10.0" prefWidth="122.0"/>
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" minWidth="7.0" prefWidth="7.0"/>
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="162.0" minWidth="10.0" prefWidth="132.0"/>
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints maxHeight="85.0" minHeight="10.0" prefHeight="20.0" vgrow="SOMETIMES"/>
+            <RowConstraints maxHeight="85.0" minHeight="6.0" prefHeight="8.0" vgrow="SOMETIMES"/>
+            <RowConstraints maxHeight="85.0" minHeight="0.0" prefHeight="35.0" vgrow="SOMETIMES"/>
+            <RowConstraints maxHeight="180.0" minHeight="3.0" prefHeight="48.0" vgrow="SOMETIMES"/>
+            <RowConstraints maxHeight="237.0" minHeight="9.0" prefHeight="36.0" vgrow="SOMETIMES"/>
+            <RowConstraints maxHeight="237.0" minHeight="10.0" prefHeight="104.0" vgrow="SOMETIMES"/>
+            <RowConstraints maxHeight="85.0" minHeight="10.0" prefHeight="21.0" vgrow="SOMETIMES"/>
+         </rowConstraints>
+         <Text fontSmoothingType="LCD" nodeOrientation="LEFT_TO_RIGHT" strokeType="OUTSIDE" strokeWidth="0.0"
+               text="Server Port:" textOrigin="CENTER" wrappingWidth="94.74658203125" GridPane.halignment="RIGHT"
+               GridPane.rowIndex="2">
+            <font>
+               <Font name="Hack Regular" size="13.0"/>
+            </font>
+            <cursor>
+               <Cursor fx:constant="DEFAULT"/>
+            </cursor>
+         </Text>
+         <TextField fx:id="serverPort" text="25565" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+         <Text fontSmoothingType="LCD" nodeOrientation="LEFT_TO_RIGHT" strokeType="OUTSIDE" strokeWidth="0.0"
+               text="App Theme:" textAlignment="CENTER" textOrigin="CENTER" wrappingWidth="78.74658203125"
+               GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+            <font>
+               <Font name="Hack Regular" size="13.0"/>
+            </font>
+            <cursor>
+               <Cursor fx:constant="DEFAULT"/>
+            </cursor>
+         </Text>
+         <ChoiceBox fx:id="themeSelector" prefHeight="25.0" prefWidth="151.0" GridPane.columnIndex="2"
+                    GridPane.rowIndex="3"/>
+         <Text fontSmoothingType="LCD" nodeOrientation="LEFT_TO_RIGHT" strokeType="OUTSIDE" strokeWidth="0.0"
+               text="Accept EULA:" textAlignment="RIGHT" textOrigin="CENTER" wrappingWidth="101.74658203125"
+               GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+            <font>
+               <Font name="Hack Regular" size="13.0"/>
+            </font>
+            <cursor>
+               <Cursor fx:constant="DEFAULT"/>
+            </cursor>
+         </Text>
+         <CheckBox fx:id="acceptEULA" mnemonicParsing="false" prefHeight="17.0" prefWidth="25.0" selected="true"
+                   GridPane.columnIndex="2" GridPane.rowIndex="4">
+            <padding>
+               <Insets right="60.0"/>
+            </padding>
+         </CheckBox>
+      </GridPane>
+   </center>
 </BorderPane>

@@ -38,8 +38,7 @@ public class API {
             log.log(Level.WARNING, "Could not start server", e);
         }
 
-        // Return the default port number (25565)
-        return 25565;
+        return server.getPort();
     }
 
     /**

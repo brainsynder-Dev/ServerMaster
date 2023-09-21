@@ -4,9 +4,14 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.bsdevelopment.serverapp.server.API;
 import org.bsdevelopment.serverapp.server.ServerJarManager;
 import org.bsdevelopment.serverapp.server.ServerWrapper;
@@ -19,6 +24,7 @@ import java.lang.module.ModuleDescriptor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
@@ -97,7 +103,9 @@ public class ServerController implements Initializable {
                                 if (statusCode == 1) System.out.println("[ServerMaster] The server process was forced to stop");
                             });
 
+                            System.out.println();
                             System.out.println("[ServerMaster] Starting server on localhost:" + port);
+                            System.out.println();
                         });
 
                         items.add(menuItem);
@@ -119,6 +127,13 @@ public class ServerController implements Initializable {
             forceStopServer();
         });
         context.getItems().add(killServer);
+
+        context.getItems().add(new SeparatorMenuItem());
+        MenuItem settings = new MenuItem("Application Settings");
+        settings.onActionProperty().set(actionEvent -> {
+            openSettings();
+        });
+        context.getItems().add(settings);
     }
 
     /**
@@ -141,6 +156,8 @@ public class ServerController implements Initializable {
             System.out.println("   Will explain how to name the server jar files");
             System.out.println("?? clear");
             System.out.println("   Will clear the console window of all text");
+            System.out.println("?? settings");
+            System.out.println("   Will open the settings for the application");
             return;
         }
 
@@ -175,8 +192,32 @@ public class ServerController implements Initializable {
             return;
         }
 
+        if ("?? settings".equalsIgnoreCase(text)) {
+            openSettings();
+            return;
+        }
+
         // Send the command to the server
         API.sendServerCommand(text);
+    }
+
+    private void openSettings () {
+        try {
+            Stage child = new Stage();
+            child.initModality(Modality.APPLICATION_MODAL);
+            child.initOwner(ServerMasterApplication.getAppStage());
+            child.getIcons().add(new Image(Objects.requireNonNull(ServerMasterApplication.class.getResourceAsStream("icon.png"))));
+
+            child.setResizable(false);
+            child.setTitle("Server Master - Settings");
+
+            FXMLLoader fxmlLoader = new FXMLLoader(ServerMasterApplication.class.getResource("settings-view.fxml"));
+            Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+            child.setScene(scene);
+            child.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
