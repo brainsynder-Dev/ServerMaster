@@ -122,7 +122,9 @@ Console commands can be entered into the TextField at the bottom and you can sim
 ## Roadmap
 
 - [ ] Cleanup the code `(Its a bit of a mess because it was just completed :P)`
-- [ ] Theme Selection
+- [x] Theme Selection
+- [x] Server Port Setting
+- [x] EULA set to true by default
 - [ ] Console Colorization `(Really need to figure this out...)`
 - [ ] Server Jar Installer
 
