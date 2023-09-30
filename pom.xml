@@ -28,6 +28,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-intellij-themes</artifactId>
+            <version>3.2.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>com.jeff-media</groupId>
             <artifactId>javafinder</artifactId>
             <version>1.4</version>
