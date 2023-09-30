@@ -72,7 +72,7 @@ Well anyone could technically use this, I personally was aiming this for plugin 
 ### Built With
 
 * ![Java][Java]
-* ![JavaFX][JavaFX]
+* ![JavaSwing][JavaSwing]
 * ![IntelliJ][IntelliJ]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -90,8 +90,8 @@ Well anyone could technically use this, I personally was aiming this for plugin 
 #### Installation
 
 1. Grab the latest [release](https://github.com/brainsynder-Dev/ServerMaster/releases)
-2. Put the `ServerMaster.jar` in a folder that you want the server to be run from
-3. Once you have the `ServerMaster.jar` in the folder, proceed to add any server jars you want to use
+2. Put the `ServerMaster.jar` (or the `ServerMaster.exe`) in a folder that you want the server to be run from
+3. Once you have the `ServerMaster` executable in the folder, proceed to add any server jars you want to use
 4. When adding the server jar files, ensure they follow this pattern: `ServerType-MCVersion.jar` (Example: `spigot-1.18.2.jar`)
 5. Run the server at least once `(If the folder was empty)` after it was run, configure all the main settings for the server
 
@@ -102,17 +102,44 @@ Well anyone could technically use this, I personally was aiming this for plugin 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-To start a server, All you have to do is `Right Click` in the Application, and it will open a context menu that you can select what type of server and also what version.
+### How to start a server:
+<div align="center">
 
-Once you have a server started you can also re-open the context menu to `Stop` the server and also `Force Stop` the server
+<img src="https://i.imgur.com/z4vW8SQ.png" alt="Initial view" width="412" height="190">
+<span style="color: gray"></br>Initial view of the application</span>
+<br><br>
 
-* Stop - Will auto run the `/stop` command in the console saving all the data
-* Force Stop - Should only be used in emergencies as it will NOT save anything, it does that it says it forcibly stops the server no matter what...
-```manifest
-Note: Closing the Java Application has the same affects as `Force Stopping` the server
-```
+1] Select what type of server you would like to run
 
-Console commands can be entered into the TextField at the bottom and you can simply press your `Enter` key to send the command 
+<img src="https://imgur.com/JddJsfH.png" alt="server type selection" width="412" height="190">
+
+2] Once you have a server type you would like to start, then you must select what version you would like to run
+
+<img src="https://imgur.com/AthKg9H.png" alt="server version selection" width="412" height="190">
+
+3] After you have selected your server type and version, you can go ahead and click the "Start Server" button
+
+<img src="https://i.imgur.com/LMQwP6P.png" alt="Start server button" width="312" height="190">
+</div>
+
+### How to stop the server
+After you have finished with the server you can stop it a few ways such as:
+- Using the `stop` command
+- Clicking the `STOP SERVER` button (will essentially run the `stop` command)
+- Clicking the `FORCE STOP` button (This will force the server task to end, resulting in 0 saving)
+- Clicking the `X` at the top to close the window
+
+<div align="center">
+    <img src="https://i.imgur.com/zY7QdJE.png" alt="Stop/Force Stop buttons" width="400" height="100">
+</div>
+
+
+| :warning: |
+| ------------ |
+|  This is a test |
+
+> [!IMPORTANT]
+> Console commands can be entered into the TextField at the bottom, and you can simply press your `Enter` key to send the command 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -125,7 +152,7 @@ Console commands can be entered into the TextField at the bottom and you can sim
 - [x] Theme Selection
 - [x] Server Port Setting
 - [x] EULA set to true by default
-- [ ] Console Colorization `(Really need to figure this out...)`
+- [x] Console Colorization `(Really need to figure this out...)`
 - [ ] Server Jar Installer
 
 Have an idea? Create an enhancement/feature [issue](https://github.com/github_username/repo_name/issues) 
@@ -191,8 +218,8 @@ None yet...
 [issues-url]: https://github.com/brainsynder-Dev/ServerMaster/issues
 [license-shield]: https://img.shields.io/github/license/brainsynder-Dev/ServerMaster.svg?style=for-the-badge
 [license-url]: https://github.com/brainsynder-Dev/ServerMaster/blob/master/LICENSE
-[product-screenshot]: https://i.imgur.com/8xU3aTx.png
+[product-screenshot]: https://i.imgur.com/39sflQ2.png
 
 [IntelliJ]: https://img.shields.io/badge/IntelliJIDEA-000000.svg?style=for-the-badge&logo=intellij-idea&logoColor=white
 [Java]: https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white
-[JavaFX]: https://img.shields.io/badge/javafx-%239999FF.svg?style=for-the-badge&logoColor=white
+[JavaSwing]: https://img.shields.io/badge/java%20swing-%239999FF.svg?style=for-the-badge&logoColor=white
