@@ -10,7 +10,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/brainsynder-Dev/ServerMaster">
-    <img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/org/bsdevelopment/serverapp/icon.png?raw=true" alt="Logo" width="250" height="250">
+    <img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/icon.png?raw=true" alt="Logo" width="250" height="250">
   </a>
 
 <h3 align="center">Server Master</h3>
@@ -132,11 +132,6 @@ After you have finished with the server you can stop it a few ways such as:
 <div align="center">
     <img src="https://i.imgur.com/zY7QdJE.png" alt="Stop/Force Stop buttons" width="400" height="100">
 </div>
-
-
-| :warning: |
-| ------------ |
-|  This is a test |
 
 > [!IMPORTANT]
 > Console commands can be entered into the TextField at the bottom, and you can simply press your `Enter` key to send the command 
