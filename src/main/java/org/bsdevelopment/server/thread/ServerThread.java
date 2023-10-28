@@ -22,6 +22,7 @@ public class ServerThread extends Thread {
 
     // Callback to notify events related to server thread execution
     private final ServerThreadCallback callback;
+    private ServerThreadCallback serverStopCallback;
 
     // The running server process
     private Process process;
@@ -46,6 +47,10 @@ public class ServerThread extends Thread {
 
         // Start the thread
         start();
+    }
+
+    public void setServerStopCallback(ServerThreadCallback serverStopCallback) {
+        this.serverStopCallback = serverStopCallback;
     }
 
     @Override
@@ -73,9 +78,11 @@ public class ServerThread extends Thread {
 
             // Notify the callback with the result
             callback.call(server, result);
+            if (this.serverStopCallback != null) this.serverStopCallback.call(server, result);
         } catch (InterruptedException e) {
             // Notify the callback of interruption
             callback.call(server, -1);
+            if (this.serverStopCallback != null) this.serverStopCallback.call(server, -1);
             AppConfig.sendAppMessage(() -> {
                 System.out.println(" Server Thread for " + server.getName() + " got interrupted!");
                 System.err.println(Utils.getReadableStacktrace(e));

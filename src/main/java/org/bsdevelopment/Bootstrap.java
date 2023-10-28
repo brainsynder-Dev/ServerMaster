@@ -69,6 +69,7 @@ public class Bootstrap extends JFrame {
         Dimension dimension = new Dimension(1200, 745);
 
         setSize(dimension);
+        setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
         setMinimumSize(dimension);
         setTitle("Server Master");
         setIconImage(LOGO.getImage());
@@ -89,6 +90,7 @@ public class Bootstrap extends JFrame {
             case TYPE_SELECTION -> {
                 serverPanel.startServer.setEnabled(false);
                 serverPanel.forceStop.setEnabled(false);
+                serverPanel.restartServer.setEnabled(false);
                 serverPanel.stopServer.setEnabled(false);
                 serverPanel.serverCommand.setEnabled(false);
 
@@ -128,6 +130,7 @@ public class Bootstrap extends JFrame {
 
                 serverPanel.serverCommand.setEnabled(true);
                 serverPanel.forceStop.setEnabled(true);
+                serverPanel.restartServer.setEnabled(true);
                 serverPanel.stopServer.setEnabled(true);
 
 
@@ -160,6 +163,7 @@ public class Bootstrap extends JFrame {
                 serverPanel.startServer.setEnabled(true);
 
                 serverPanel.forceStop.setEnabled(false);
+                serverPanel.restartServer.setEnabled(false);
                 serverPanel.stopServer.setEnabled(false);
                 serverPanel.serverCommand.setEnabled(false);
             }
@@ -173,6 +177,13 @@ public class Bootstrap extends JFrame {
         });
 
         serverPanel.stopServer.addActionListener(e -> {
+            API.stopServer();
+        });
+
+        serverPanel.restartServer.addActionListener(e -> {
+            ServerWrapper.getInstance().getServer().getThread().setServerStopCallback((server, statusCode) -> {
+                toggleServerState(ServerState.STARTUP);
+            });
             API.stopServer();
         });
         serverPanel.forceStop.addActionListener(e -> {
@@ -660,6 +671,7 @@ public class Bootstrap extends JFrame {
             forceStop = new JButton();
             stopServer = new JButton();
             serverVersionSelection = new JComboBox();
+            restartServer = new JButton();
 
 
             serverCommand.setEnabled(false);
@@ -735,6 +747,7 @@ public class Bootstrap extends JFrame {
         private JButton forceStop;
         private JButton stopServer;
         private JComboBox serverVersionSelection;
+        private JButton restartServer;
         // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
     }
 
