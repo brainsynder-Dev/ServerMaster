@@ -15,7 +15,7 @@
         
         <main-app>org.bsdevelopment.Bootstrap</main-app>
 
-        <app-version>1.2.0</app-version>
+        <app-version>1.0.0</app-version>
 
         <exec.mainClass>${main-app}</exec.mainClass>
     </properties>
