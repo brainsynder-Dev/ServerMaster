@@ -40,6 +40,7 @@ public class Bootstrap extends JFrame {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.setLocationRelativeTo(null);
         bootstrap.setVisible(true);
+
     }
 
     public Bootstrap() {
@@ -175,6 +176,13 @@ public class Bootstrap extends JFrame {
         serverPanel.startServer.addActionListener(e -> {
             toggleServerState(ServerState.STARTUP);
         });
+
+        serverPanel.stopServer.setIcon(new StretchIcon(getClass().getResource("/stop.png"), true));
+        serverPanel.stopServer.setDisabledIcon(new StretchIcon(getClass().getResource("/stop-disabled.png"), true));
+        serverPanel.restartServer.setIcon(new StretchIcon(getClass().getResource("/restart.png"), true));
+        serverPanel.restartServer.setDisabledIcon(new StretchIcon(getClass().getResource("/restart-disabled.png"), true));
+        serverPanel.forceStop.setIcon(new StretchIcon(getClass().getResource("/force-stop.png"), true));
+        serverPanel.forceStop.setDisabledIcon(new StretchIcon(getClass().getResource("/force-stop-disabled.png"), true));
 
         serverPanel.stopServer.addActionListener(e -> {
             API.stopServer();
@@ -681,19 +689,21 @@ public class Bootstrap extends JFrame {
 
             serverTypeSelection.setToolTipText("Server Type");
 
-            forceStop.setText("FORCE STOP (EMERGENCIES ONLY)");
-            forceStop.setBackground(UIManager.getColor("TextField.selectionBackground"));
-            forceStop.setForeground(UIManager.getColor("TextField.foreground"));
             forceStop.setHorizontalTextPosition(SwingConstants.RIGHT);
+            forceStop.setIcon(new ImageIcon(getClass().getResource("/force-stop.png")));
             forceStop.setEnabled(false);
+            forceStop.setToolTipText("Force Stop Server (Emergencies Only)");
 
-            stopServer.setText("STOP SERVER");
-            stopServer.setBackground(UIManager.getColor("List.selectionBackground"));
-            stopServer.setForeground(UIManager.getColor("List.foreground"));
             stopServer.setEnabled(false);
+            stopServer.setIcon(new ImageIcon(getClass().getResource("/stop.png")));
+            stopServer.setToolTipText("Stop Server");
 
             serverVersionSelection.setEnabled(false);
             serverVersionSelection.setToolTipText("Server Version");
+
+            restartServer.setEnabled(false);
+            restartServer.setIcon(new ImageIcon(getClass().getResource("/restart.png")));
+            restartServer.setToolTipText("Restart Server");
 
             GroupLayout layout = new GroupLayout(this);
             setLayout(layout);
@@ -703,18 +713,20 @@ public class Bootstrap extends JFrame {
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup()
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(serverCommand, GroupLayout.DEFAULT_SIZE, 873, Short.MAX_VALUE)
+                                .addComponent(serverCommand)
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(startServer, GroupLayout.PREFERRED_SIZE, 109, GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(serverTypeSelection, GroupLayout.PREFERRED_SIZE, 150, GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(serverVersionSelection, GroupLayout.PREFERRED_SIZE, 175, GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 270, Short.MAX_VALUE)
-                                .addComponent(stopServer, GroupLayout.PREFERRED_SIZE, 150, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 495, Short.MAX_VALUE)
+                                .addComponent(stopServer, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(forceStop, GroupLayout.PREFERRED_SIZE, 231, GroupLayout.PREFERRED_SIZE))
-                            .addComponent(consolePane, GroupLayout.DEFAULT_SIZE, 988, Short.MAX_VALUE))
+                                .addComponent(restartServer, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(forceStop, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE))
+                            .addComponent(consolePane))
                         .addContainerGap())
             );
             layout.setVerticalGroup(
@@ -722,13 +734,14 @@ public class Bootstrap extends JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
-                            .addComponent(stopServer, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(forceStop, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(restartServer, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
+                            .addComponent(stopServer, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
                             .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(serverTypeSelection, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(serverVersionSelection, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(serverTypeSelection, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(serverVersionSelection, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE))
+                            .addComponent(forceStop, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(consolePane, GroupLayout.DEFAULT_SIZE, 601, Short.MAX_VALUE)
+                        .addComponent(consolePane, GroupLayout.DEFAULT_SIZE, 596, Short.MAX_VALUE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup()
                             .addComponent(startServer, GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)
