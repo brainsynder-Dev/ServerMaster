@@ -7,15 +7,18 @@ import org.bsdevelopment.server.ServerJarManager;
 import org.bsdevelopment.server.ServerState;
 import org.bsdevelopment.server.ServerWrapper;
 import org.bsdevelopment.text.MessageConsole;
-import org.bsdevelopment.utils.*;
+import org.bsdevelopment.utils.DelayedTextChangedListener;
+import org.bsdevelopment.utils.StretchIcon;
+import org.bsdevelopment.utils.Theme;
+import org.bsdevelopment.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Bootstrap extends JFrame {
     public static File LOG_FILE;
@@ -32,6 +35,7 @@ public class Bootstrap extends JFrame {
     private final MessageConsole console;
     private final String placeholderVersion = "Select Server Version...";
     private final String placeholderType = "Select Server Type...";
+    private boolean valueFromSaves = false;
 
 
     public static void main(String[] args) {
@@ -40,7 +44,6 @@ public class Bootstrap extends JFrame {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.setLocationRelativeTo(null);
         bootstrap.setVisible(true);
-
     }
 
     public Bootstrap() {
@@ -104,11 +107,19 @@ public class Bootstrap extends JFrame {
                     serverPanel.serverVersionSelection.setEnabled(true);
 
                     serverPanel.serverVersionSelection.addItem(placeholderVersion);
-                    serverPanel.serverVersionSelection.setSelectedItem(placeholderVersion);
 
                     jarManager.sortVersions(jarManager.getSupportedJars().get(String.valueOf(serverPanel.serverTypeSelection.getSelectedItem()))).forEach(version -> {
                         serverPanel.serverVersionSelection.addItem(version);
                     });
+
+                    if (valueFromSaves) {
+                        System.out.println("Loaded Saved Server version...");
+                        serverPanel.serverVersionSelection.setSelectedItem(AppConfig.serverVersion);
+                        valueFromSaves = false;
+                    }else{
+                        System.out.println("Blank Server Version");
+                        serverPanel.serverVersionSelection.setSelectedItem(placeholderVersion);
+                    }
                     return true;
                 }
             }
@@ -175,6 +186,9 @@ public class Bootstrap extends JFrame {
     private void loadServerData() {
         serverPanel.startServer.addActionListener(e -> {
             toggleServerState(ServerState.STARTUP);
+            AppConfig.serverType = String.valueOf(serverPanel.serverTypeSelection.getSelectedItem());
+            AppConfig.serverVersion = String.valueOf(serverPanel.serverVersionSelection.getSelectedItem());
+            AppConfig.saveData();
         });
 
         serverPanel.stopServer.setIcon(new StretchIcon(getClass().getResource("/stop.png"), true));
@@ -218,6 +232,18 @@ public class Bootstrap extends JFrame {
             toggleServerState(ServerState.VERSION_SELECTION);
         });
 
+        if ((!AppConfig.serverType.isEmpty()) && (!AppConfig.serverVersion.isEmpty())) {
+            try {
+                jarManager.getJar(AppConfig.serverType, AppConfig.serverVersion);
+
+                valueFromSaves = true;
+                serverPanel.serverTypeSelection.setSelectedItem(AppConfig.serverType);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        /*
         context = new JPopupMenu();
 
         jarManager.getSupportedJars().forEach((s, serverJars) -> {
@@ -270,6 +296,7 @@ public class Bootstrap extends JFrame {
         });
 
         // serverPanel.consolePane.getConsoleArea().setComponentPopupMenu(context);
+        */
     }
 
     private void updateComponents() {
@@ -374,7 +401,7 @@ public class Bootstrap extends JFrame {
 
     private void handleRamField() {
         JTextField ramField = settingsPanel.getServerRam();
-        Utils.numericalCharacterCheck(ramField);
+        // Utils.numericalCharacterCheck(ramField);
         ramField.getDocument().addDocumentListener(getMemoryChangedListener());
     }
 
@@ -421,10 +448,17 @@ public class Bootstrap extends JFrame {
         return listener;
     }
     private DelayedTextChangedListener getMemoryChangedListener() {
+        boolean checks = false;
+
         DelayedTextChangedListener listener = new DelayedTextChangedListener(2000);
         listener.addChangeListener(e -> {
+            String rawText = settingsPanel.getServerRam().getText().trim();
+            if (!checks) {
+                AppConfig.ram = Integer.parseInt(rawText);
+                AppConfig.saveData();
+            }
+
             try {
-                String rawText = settingsPanel.getServerRam().getText().trim();
                 if (rawText.isBlank()) {
                     AppConfig.ram = 1024;
                     settingsPanel.getServerRam().setText("1024");
