@@ -18,6 +18,8 @@ public class AppConfig {
     public static Theme theme = Theme.LIGHT;
     public static boolean acceptEULA = false;
     public static String serverPath = "";
+    public static String serverType = "";
+    public static String serverVersion = "";
 
     private static boolean appSpecificMessage = false;
 
@@ -30,6 +32,8 @@ public class AppConfig {
                 properties.setProperty("server-path", "");
                 properties.setProperty("server-ram", "1024");
                 properties.setProperty("server-port", "25565");
+                properties.setProperty("server-type", "");
+                properties.setProperty("server-version", "");
                 properties.setProperty("theme", "Dracula");
                 properties.setProperty("eula", "false");
 
@@ -52,6 +56,10 @@ public class AppConfig {
 
         ram = Integer.parseInt(properties.getProperty("server-ram", "1024"));
         port = Integer.parseInt(properties.getProperty("server-port", "25565"));
+
+        serverType = properties.getProperty("server-type", "");
+        serverVersion = properties.getProperty("server-version", "");
+
         acceptEULA = Boolean.parseBoolean(properties.getProperty("eula", "false"));
 
         theme = Theme.valueOf(properties.getProperty("theme", "LIGHT"));
@@ -63,6 +71,8 @@ public class AppConfig {
         properties.setProperty("server-path", serverPath);
         properties.setProperty("server-ram", String.valueOf(ram));
         properties.setProperty("server-port", String.valueOf(port));
+        properties.setProperty("server-type", serverType);
+        properties.setProperty("server-version", serverVersion);
         properties.setProperty("theme", theme.name());
         properties.setProperty("eula", String.valueOf(acceptEULA));
 
