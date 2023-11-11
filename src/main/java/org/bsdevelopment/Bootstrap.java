@@ -401,12 +401,14 @@ public class Bootstrap extends JFrame {
 
     private void handleRamField() {
         JTextField ramField = settingsPanel.getServerRam();
+        ramField.setText(String.valueOf(AppConfig.ram));
         // Utils.numericalCharacterCheck(ramField);
         ramField.getDocument().addDocumentListener(getMemoryChangedListener());
     }
 
     private void handlePortField() {
         JTextField portField = settingsPanel.getServerPort();
+        portField.setText(String.valueOf(AppConfig.port));
         Utils.numericalCharacterCheck(portField);
         portField.getDocument().addDocumentListener(getPortChangedListener());
     }
@@ -583,7 +585,6 @@ public class Bootstrap extends JFrame {
 
 
 
-            serverRam.setText("1024");
             serverRam.setFont(new Font("Lucida Console", Font.PLAIN, 16));
 
             label7.setText("EULA");
@@ -603,7 +604,6 @@ public class Bootstrap extends JFrame {
             label11.setText("Server Port");
             label11.setFont(new Font("Lucida Console", Font.PLAIN, 14));
 
-            serverPort.setText("25565");
             serverPort.setFont(new Font("Lucida Console", Font.PLAIN, 16));
 
             label12.setText("App Theme");
