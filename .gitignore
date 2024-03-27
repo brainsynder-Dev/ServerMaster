@@ -2,6 +2,14 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+/config.json
+/debug.log
+/latest.log
+/package.json
+/package-lock.json
+/vite.generated.ts
+/types.d.ts
+/tsconfig.json
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -38,3 +46,46 @@ build/
 .DS_Store
 # Project exclude paths
 /output/
+
+/jcef-bundle
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+# The following files are generated/updated by vaadin-gradle-plugin
+node_modules/
+webpack.generated.js
+target
+out
+pnpmfile.js
+.npmrc
+frontend/generated

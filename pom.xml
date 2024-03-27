@@ -1,119 +1,289 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.bsdevelopment</groupId>
-    <artifactId>ServerMaster</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.0.1</version>
+    </parent>
+
+    <groupId>org.bsdevelopment.servermaster</groupId>
+    <artifactId>servermaster</artifactId>
+    <name>ServerMaster</name>
+    <version>1.4.0</version>
     <packaging>jar</packaging>
 
-    <name>ServerMaster</name>
-    
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        
-        <main-app>org.bsdevelopment.Bootstrap</main-app>
+        <java.version>17</java.version>
+        <vaadin.version>24.0.5</vaadin.version>
+        <selenium.version>4.8.3</selenium.version>
 
-        <app-version>1.3.0</app-version>
+        <main.class>org.bsdevelopment.servermaster.App</main.class>
 
-        <exec.mainClass>${main-app}</exec.mainClass>
+        <!-- selenium is so much verbose -->
+        <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
     </properties>
-    
+
+    <repositories>
+        <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
+
+        <!-- Main Maven repository -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>vaadin-prereleases</id>
+            <url>
+                https://maven.vaadin.com/vaadin-prereleases/
+            </url>
+        </repository>
+        <!-- Repository used by many Vaadin add-ons -->
+        <repository>
+            <id>Vaadin Directory</id>
+            <url>https://maven.vaadin.com/vaadin-addons</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <!-- The order of definitions matters. Explicitly defining central here to make sure it has the highest priority. -->
+        <pluginRepository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>vaadin-prereleases</id>
+            <url>
+                https://maven.vaadin.com/vaadin-prereleases/
+            </url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>graalvm-native-build-tools-snapshots</id>
+            <name>GraalVM native-build-tools Snapshots</name>
+            <url>https://raw.githubusercontent.com/graalvm/native-build-tools/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <version>${vaadin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+
+        <!-- VAADIN DEPENDENCIES -->
         <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf</artifactId>
-            <version>3.1.1</version>
-            <scope>compile</scope>
+            <groupId>com.vaadin</groupId>
+            <!-- Replace artifactId with vaadin-core to use only free components -->
+            <artifactId>vaadin</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf-intellij-themes</artifactId>
-            <version>3.2.1</version>
-            <scope>compile</scope>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.parttio</groupId>
+            <artifactId>line-awesome</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+        <!-- MY DEPENDENCIES -->
+        <dependency>
+            <groupId>com.github.Osiris-Team</groupId>
+            <artifactId>AutoPlug-Core</artifactId>
+            <version>15.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Osiris-Team</groupId>
+            <artifactId>Better-Layout</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Osiris-Team</groupId>
+            <artifactId>jlib</artifactId>
+            <version>LATEST</version>
+        </dependency>
+        <dependency>
+            <groupId>com.eclipsesource.minimal-json</groupId>
+            <artifactId>minimal-json</artifactId>
+            <version>0.9.5</version>
         </dependency>
         <dependency>
             <groupId>com.jeff-media</groupId>
             <artifactId>javafinder</artifactId>
-            <version>1.4</version>
+            <version>1.4.2</version>
             <scope>compile</scope>
         </dependency>
+        <!-- https://github.com/jcefmaven/jcefmaven -->
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.13.0</version>
-            <scope>compile</scope>
+            <groupId>me.friwi</groupId>
+            <artifactId>jcefmaven</artifactId>
+            <version>109.1.11</version>
         </dependency>
+
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>32.1.2-jre</version>
-            <scope>compile</scope>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
+        <defaultGoal>spring-boot:run</defaultGoal>
         <finalName>${project.name}</finalName>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Clean build and startup time for Vaadin apps sometimes may exceed
+                     the default Spring Boot's 30sec timeout.  -->
                 <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Main-Class>${main-app}</Main-Class>
-                            <Implementation-Title>ServerMaster</Implementation-Title>
-                            <Implementation-Version>${app-version}</Implementation-Version>
-                        </manifestEntries>
-                    </archive>
+                    <jvmArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5749</jvmArguments>
+                    <wait>500</wait>
+                    <maxAttempts>240</maxAttempts>
                 </configuration>
             </plugin>
+
+            <!--
+                Take care of synchronizing java dependencies and imports in
+                package.json and main.js files.
+                It also creates webpack.config.js if not exists yet.
+            -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-maven-plugin</artifactId>
+                <version>${vaadin.version}</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>prepare-frontend</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>**/*.java</exclude>
-                                <exclude>**/*.SF</exclude>
-                                <exclude>**/*.DSA</exclude>
-                            </excludes>
-                        </filter>
-                        <filter>
-                            <artifact>com.formdev:flatlaf</artifact>
-                            <includes>
-                                <include>**</include>
-                            </includes>
-                        </filter>
-                    </filters>
-                    <minimizeJar>true</minimizeJar>
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
-                </configuration>
             </plugin>
+
         </plugins>
     </build>
 
     <profiles>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <image>
+                                <builder>paketobuildpacks/builder:tiny</builder>
+                                <env>
+                                    <BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
+                                </env>
+                            </image>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>0.9.19</version>
+                        <configuration>
+                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                            <metadataRepository>
+                                <enabled>true</enabled>
+                            </metadataRepository>
+                            <requiredVersion>22.3</requiredVersion>
+                            <skipNativeTests>true</skipNativeTests>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>add-reachability-metadata</id>
+                                <goals>
+                                    <goal>add-reachability-metadata</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <!-- Production mode is activated using -Pproduction -->
+            <id>production</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-maven-plugin</artifactId>
+                        <version>${vaadin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build-frontend</goal>
+                                </goals>
+                                <phase>compile</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <productionMode>true</productionMode>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>windows-exe</id>
             <build>
@@ -131,17 +301,17 @@
                                 <configuration>
                                     <headerType>gui</headerType>
                                     <classPath>
-                                        <mainClass>${main-app}</mainClass>
+                                        <mainClass>org.springframework.boot.loader.JarLauncher</mainClass>
                                     </classPath>
                                     <jre>
                                         <minVersion>17</minVersion>
                                         <path>%JAVA_HOME%;%PATH%</path>
                                     </jre>
-                                    <icon>src/main/resources/icon.ico</icon>
+                                    <icon>src/main/resources/images/icon.ico</icon>
                                     <outfile>${project.build.directory}/${project.build.finalName}.exe</outfile>
                                     <versionInfo>
-                                        <txtFileVersion>${app-version}</txtFileVersion>
-                                        <txtProductVersion>${app-version}</txtProductVersion>
+                                        <txtFileVersion>${project.version}</txtFileVersion>
+                                        <txtProductVersion>${project.version}</txtProductVersion>
                                     </versionInfo>
                                 </configuration>
                             </execution>
@@ -150,5 +320,34 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>it</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>start-spring-boot</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>start</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>stop-spring-boot</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>stop</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
     </profiles>
 </project>
