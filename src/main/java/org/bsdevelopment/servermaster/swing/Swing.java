@@ -25,14 +25,6 @@ public class Swing {
         return comp;
     }
 
-    public static JLabel2 label(String txt, Color txtColor, Color outlineColor, int pxThickness) {
-        JLabel2 label = new JLabel2(txt, pxThickness);
-        label.setOutlineColor(outlineColor);
-        label.setForeground(txtColor);
-        label.setOpaque(true);
-        return label;
-    }
-
     public static JLabel image(Image image) {
         return new JLabel(new ImageIcon(image));
     }
@@ -40,6 +32,4 @@ public class Swing {
     public static JLabel image(Image image, int width, int height) {
         return new JLabel(new ImageIcon(image.getScaledInstance(width, height, Image.SCALE_FAST)));
     }
-
-
 }

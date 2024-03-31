@@ -10,7 +10,6 @@ import org.bsdevelopment.servermaster.server.jar.ServerJarManager;
 import org.bsdevelopment.servermaster.swing.LoadingWindow;
 import org.bsdevelopment.servermaster.swing.Swing;
 import org.bsdevelopment.servermaster.swing.Window;
-import org.bsdevelopment.servermaster.swing.WindowUtils;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -51,7 +50,8 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
 
     private static AppConfig CONFIG;
     private static ServerJarManager jarManager;
-    private static int MAX_RAM;
+    public static int MAX_RAM;
+    public static LoadingWindow LOADING_WINDOW;
 
     public static void main(String[] args) throws IOException {
         if (!LOG_FILE.exists()) {
@@ -71,27 +71,28 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
         MAX_RAM = (int) (Runtime.getRuntime().freeMemory() / 125000);
         jarManager = new ServerJarManager(new File(AppConfig.serverPath));
 
-        WindowUtils.LOADING_WINDOW.setVisible(true);
-        WindowUtils.LOADING_WINDOW.setAlwaysOnTop(true);
         SpringApplication springApp = new SpringApplication(App.class);
-
         Properties props = new Properties();
         sitePort = new ServerSocket(0).getLocalPort(); // get random free port
         props.put("server.port", sitePort);
         props.put("security.require-ssl", "false");
         springApp.setDefaultProperties(props);
-
         context = springApp.run(args);
+
         System.setProperty("java.awt.headless", "false");
-        siteDisplay = new Window(WindowUtils.LOADING_WINDOW);
+        LOADING_WINDOW = new LoadingWindow();
+        siteDisplay = new Window(LOADING_WINDOW);
+        LOADING_WINDOW.setVisible(true);
+        LOADING_WINDOW.setAlwaysOnTop(true);
+        LOADING_WINDOW.setLocationRelativeTo(siteDisplay);
         siteDisplay.setVisible(true);
-        siteDisplay.setSize(5,50);
+        siteDisplay.setSize(5, 50);
         Swing.center(siteDisplay);
 
         new ServerWrapper(jarManager);
     }
 
-    public static void showApplication () {
+    public static void showApplication() {
         siteDisplay.setState(Frame.NORMAL);
 
         siteDisplay.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -101,7 +102,7 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
         siteDisplay.setExtendedState(siteDisplay.getExtendedState() | JFrame.MAXIMIZED_BOTH);
         siteDisplay.setMinimumSize(dimension);
 
-        WindowUtils.WINDOW_LIST.forEach(LoadingWindow::close);
+        LOADING_WINDOW.close();
     }
 
     public static Image getIcon() throws IOException {
