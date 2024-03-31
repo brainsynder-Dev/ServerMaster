@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -57,8 +58,11 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
         if (!LOG_FILE.exists()) {
             try {
                 LOG_FILE.createNewFile();
-            }catch (Exception e) {
-                AppUtilities.delayedLogMessage("[ERROR]: Failed to create 'latest.log' in the "+LOG_FILE.getParentFile().getName()+" folder (Missing WRITE Permissions)");
+            } catch (Exception e) {
+                AppUtilities.logMessage("[ERROR]",
+                        "Failed to create 'latest.log' in the " + LOG_FILE.getParentFile().getName() + " folder",
+                        "Chances are the folder does not allow READ/WRITE permissions"
+                );
             }
         }
 
@@ -66,7 +70,11 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
         try {
             CONFIG.load();
         } catch (IOException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            AppUtilities.logMessage(AppUtilities.LogPrefix.ERROR, "Startup Issue", Arrays.asList(
+                    "An issue occurred on startup causing the '" + CONFIG.getJsonFile().getAbsolutePath() + "' file",
+                    "to encounter an issue when loading its content:",
+                    e.getMessage()
+            ));
         }
         MAX_RAM = (int) (Runtime.getRuntime().freeMemory() / 125000);
         jarManager = new ServerJarManager(new File(AppConfig.serverPath));
@@ -124,11 +132,15 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
         return Toolkit.getDefaultToolkit().getImage(img.getAbsolutePath());
     }
 
-    public static void saveConfig () {
+    public static void saveConfig() {
         try {
             CONFIG.saveNow();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            AppUtilities.logMessage(AppUtilities.LogPrefix.ERROR,
+                    "An issue occurred on save causing the '" + CONFIG.getJsonFile().getAbsolutePath() + "' file",
+                    "to encounter an issue when saving its data to the file:",
+                    e.getMessage()
+            );
         }
     }
 
