@@ -12,7 +12,6 @@ public class ViewHandler {
     public static InstallerDialog INSTALLER;
     public static JavaVersionDialog JAVA_VERSION;
 
-
     public static Span DEV_MODE = new Span();
 
     public static final JavaInstallationManager JAVA_MANAGER = new JavaInstallationManager();
