@@ -10,6 +10,7 @@ public class AppConfig extends JsonFile {
     public static boolean auto_scroll = true;
 
     public static String serverPath = "";
+    public static String javaPath = "";
 
     public static String serverType = "";
     public static String serverVersion = "";
