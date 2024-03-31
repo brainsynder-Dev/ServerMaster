@@ -6,6 +6,7 @@ import org.bsdevelopment.servermaster.server.jar.ServerJar;
 import org.bsdevelopment.servermaster.server.thread.ServerThread;
 import org.bsdevelopment.servermaster.server.thread.ServerThreadCallback;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
+import org.bsdevelopment.servermaster.views.ViewHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -152,7 +153,7 @@ public class Server {
      */
     private List<String> getJavaOptions(String path) {
         List<String> options = new ArrayList<>();
-        options.add("java");
+        options.add(((AppConfig.javaPath == null) || AppConfig.javaPath.isEmpty()) ? ViewHandler.JAVA_MANAGER.getPrimaryInstallation().getJavaExecutable().getAbsolutePath() : AppConfig.javaPath);
         options.add("-Xms" + AppConfig.ram + "M");
         options.add("-Xmx" + AppConfig.ram + "M");
         options.add("-DIReallyKnowWhatIAmDoingISwear");

@@ -26,11 +26,6 @@ public class JavaVersionDialog extends Dialog {
         LinkedList<JavaInstallation> javaDataList = new LinkedList<>();
         for (JavaInstallation installation : ViewHandler.JAVA_MANAGER.getInstallations()) {
             javaDataList.addLast(installation);
-//            javaDataList.addLast(new JavaData(
-//                    installation.isCurrentJavaVersion(),
-//                    installation.getType() + " " + installation.getVersion().getMajor(),
-//                    installation.getJavaExecutable().getAbsolutePath()
-//            ));
         }
 
         Button installButton = new Button("Select");
@@ -59,8 +54,8 @@ public class JavaVersionDialog extends Dialog {
             if (!installButton.isEnabled()) return;
             Optional<JavaInstallation> optional = grid.getSelectedItems().stream().findFirst();
             optional.ifPresent(installation -> {
-                ViewHandler.JAVA_MANAGER.setSelectedInstallation(installation);
-                ViewHandler.APP_SETTINGS.getJavaPath().setValue(installation.getJavaExecutable().getAbsolutePath());
+                String path = installation.getJavaExecutable().getAbsolutePath();
+                ViewHandler.APP_SETTINGS.getJavaPath().setValue(path);
             });
         });
 
