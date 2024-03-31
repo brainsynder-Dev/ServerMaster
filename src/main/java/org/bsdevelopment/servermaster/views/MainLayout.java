@@ -6,6 +6,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.shared.Tooltip;
@@ -17,7 +18,7 @@ import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.AppConfig;
 import org.bsdevelopment.servermaster.server.ServerWrapper;
 import org.bsdevelopment.servermaster.swing.DevToolsDialog;
-import org.bsdevelopment.servermaster.swing.WindowUtils;
+import org.bsdevelopment.servermaster.utils.AppUtilities;
 
 import java.util.function.Consumer;
 
@@ -114,7 +115,7 @@ public class MainLayout extends AppLayout {
         header.setHeight("min-content");
         header.setAlignItems(FlexComponent.Alignment.CENTER);
         header.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
-        WindowUtils.updateTheme();
+        AppUtilities.updateTheme();
 
         Div layout = new Div();
         layout.addClassNames(Display.FLEX, AlignItems.CENTER, Padding.Horizontal.LARGE);
@@ -207,7 +208,13 @@ public class MainLayout extends AppLayout {
             installer.add(VaadinIcon.CLOUD_DOWNLOAD_O.create());
             installer.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
             installer.addClickListener(spanClickEvent -> {
-                // if (ServerWrapper.getInstance().isServerRunning()) return;
+                if (ServerWrapper.getInstance().isServerRunning()) {
+                    AppUtilities.sendNotification(
+                            "Unable to access server installer while server is running",
+                            NotificationVariant.LUMO_ERROR
+                    );
+                    return;
+                }
                 if (ViewHandler.INSTALLER == null) return;
                 ViewHandler.INSTALLER.open();
             });
@@ -225,7 +232,13 @@ public class MainLayout extends AppLayout {
             appSettings.add(VaadinIcon.COG_O.create());
             appSettings.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
             appSettings.addClickListener(spanClickEvent -> {
-                if (ServerWrapper.getInstance().isServerRunning()) return;
+                if (ServerWrapper.getInstance().isServerRunning()) {
+                    AppUtilities.sendNotification(
+                            "Unable to access settings while server is running",
+                            NotificationVariant.LUMO_ERROR
+                    );
+                    return;
+                }
                 if (ViewHandler.APP_SETTINGS == null) return;
                 ViewHandler.APP_SETTINGS.open();
             });
