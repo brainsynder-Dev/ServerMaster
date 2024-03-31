@@ -1,11 +1,11 @@
 package org.bsdevelopment.servermaster.views.serverconsole.console;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
-import org.bsdevelopment.servermaster.utils.SpaceBreak;
 
 import java.awt.*;
 import java.io.*;
@@ -112,8 +112,12 @@ public class MessageConsole {
         public void flush() {
             String message = toString();
 
-            if (message.isEmpty()) {
-                serverLog.newMessage(new SpaceBreak());
+            if (message.isEmpty() || message.trim().isEmpty()) {
+                ui.access(() -> {
+                    Span span = new Span();
+                    span.getStyle().set("padding-bottom", "19px");
+                    serverLog.newMessage(span);
+                });
                 reset();
                 return;
             }
@@ -127,7 +131,7 @@ public class MessageConsole {
             if (message.contains("/WARN]:")
                     || message.contains(" WARN]:")
                     || message.contains("[WARN]:")) {
-                color.set(AppUtilities.toHex(Color.ORANGE));
+                color.set("var(--custom-warning-color)");
                 error = false;
                 previousColor = "";
             } else if (message.contains("/SEVERE]:")
@@ -135,7 +139,7 @@ public class MessageConsole {
                     || message.contains("[SEVERE]:")) {
                 severeError.set(true);
                 error = true;
-                color.set(AppUtilities.toHex(Color.magenta));
+                color.set("var(--custom-severe-color)");
                 previousColor = color.get();
             } else if (message.contains("/INFO]:")
                     || message.contains(" INFO]:")
@@ -156,19 +160,78 @@ public class MessageConsole {
                 previousColor = "";
             }
 
+            AtomicBoolean customMessage = new AtomicBoolean(false);
+            if (message.startsWith("@WARN")) {
+                color.set("var(--custom-warning-color)");
+                message = message.replaceFirst("@WARN", "");
+                customMessage.set(true);
+            }else if (message.startsWith("@ERROR")) {
+                error = true;
+                color.set("var(--lumo-success-color)");
+                message = message.replaceFirst("@ERROR", "");
+                customMessage.set(true);
+            }else if (message.startsWith("@COMMAND")) {
+                color.set("var(--custom-command-color)");
+                message = message.replaceFirst("@COMMAND", "");
+                customMessage.set(true);
+            }else if (message.startsWith("@INFO")) {
+                color.set(null);
+                message = message.replaceFirst("@INFO", "");
+                customMessage.set(true);
+            }
 
+
+            AtomicReference<String> finalMessage = new AtomicReference<>(message);
             ui.access(() -> {
-                Paragraph text = new Paragraph(message);
+                HorizontalLayout layout = new HorizontalLayout();
+                layout.setSpacing(false);
+                layout.setPadding(false);
+                layout.setMargin(false);
+
+                if (finalMessage.get().contains("@U1")) {
+                    layout.add(AppUtilities.unicodeSpan("unicode-down-right", color.get()));
+                    finalMessage.set(finalMessage.get().replace("@U1", ""));
+                }
+
+                if (finalMessage.get().contains("@U2")) {
+                    Span span = AppUtilities.unicodeSpan("unicode-horizontal", color.get());
+                    span.getStyle().set("padding-right", "20px !important");
+                    layout.add(span);
+                    finalMessage.set(finalMessage.get().replace("@U2", ""));
+                }
+
+                if (finalMessage.get().contains("@U3")) {
+                    Span span = AppUtilities.unicodeSpan("unicode-vertical", color.get());
+                    span.getStyle().set("padding-right", "20px !important");
+                    layout.add(span);
+                    finalMessage.set(finalMessage.get().replace("@U3", ""));
+                }
+
+                if (finalMessage.get().contains("@U4")) {
+                    layout.add(AppUtilities.unicodeSpan("unicode-up-right", color.get()));
+                    finalMessage.set(finalMessage.get().replace("@U4", ""));
+                }
+
+                if (finalMessage.get().contains("@U5")) {
+                    for (int i = 0; i != 12; i++) layout.add(AppUtilities.unicodeSpan("unicode-horizontal", color.get()));
+                    finalMessage.set(finalMessage.get().replace("@U5", ""));
+                }
+
+                Span text = new Span(finalMessage.get());
+                text.addClassName("consoleText");
                 if (error && (!previousColor.isEmpty())) color.set(previousColor);
 
                 if (color.get() != null) {
                     text.getStyle().set("color", color.get());
                     if (severeError.get()) text.getStyle().set("text-decoration", "underline red wavy");
                 }
+                if (customMessage.get()) {
+                    text.getStyle().set("line-height", "19px");
+                }
 
-                if (message.trim().startsWith("at ")) text.getStyle().set("padding-left", "20px");
-
-                serverLog.newMessage(text);
+                if (finalMessage.get().trim().startsWith("at ")) text.getStyle().set("padding-left", "20px");
+                layout.add(text);
+                serverLog.newMessage(layout);
             });
 
             reset();

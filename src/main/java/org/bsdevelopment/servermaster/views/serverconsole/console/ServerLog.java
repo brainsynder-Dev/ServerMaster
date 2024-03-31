@@ -21,12 +21,6 @@ public class ServerLog extends Scroller {
 
     public void newMessage(Component... components){
         for (Component component : components) {
-            component.getStyle().set("margin", "0")
-                    .set("font-size", "smaller")
-                    .set("font-weight", "500")
-                    .set("-webkit-text-stroke", "0.1px")
-                    .set("-webkit-text-stroke-color", "black");
-
             layout.add(component);
         }
 
