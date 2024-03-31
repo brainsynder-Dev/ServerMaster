@@ -1,8 +1,9 @@
 package org.bsdevelopment.servermaster.server.jar;
 
-import com.vaadin.flow.component.notification.Notification;
+import org.bsdevelopment.servermaster.AppConfig;
 import org.bsdevelopment.servermaster.server.error.ServerJarNotFoundException;
 import org.bsdevelopment.servermaster.server.utils.Version;
+import org.bsdevelopment.servermaster.utils.AppUtilities;
 
 import java.io.File;
 import java.util.*;
@@ -23,11 +24,28 @@ public class ServerJarManager {
 
     public void updateRepo (File repo) {
         this.supportedJars.clear();
-
         this.repo = repo;
 
         if (repo == null) {
-            Notification.show("Unable to update server path, no server path found!");
+            AppUtilities.logMessage(AppUtilities.LogPrefix.ERROR,
+                    "Unable to update files, no 'Server Folder Location' is set",
+                    "Please open the Settings and configure the 'Server Folder Location'"
+            );
+            return;
+        }
+        if (repo.listFiles() == null) {
+            AppUtilities.logMessage(AppUtilities.LogPrefix.ERROR,
+                    "The ServerMaster application is not fully setup",
+                    "Please open the Settings and configure the 'Server Folder Location'"
+            );
+            return;
+        }
+        if (repo.listFiles().length == 0) {
+            AppUtilities.logMessage(AppUtilities.LogPrefix.WARNING,
+                    "The ServerMaster application is not fully setup",
+                    "Missing server jars in '"+ AppConfig.serverPath +"' folder",
+                    "Please run the '?? jar' command in the app to find out how to add server jars"
+            );
             return;
         }
 
