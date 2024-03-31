@@ -4,22 +4,26 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Hr;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.AppConfig;
-import org.bsdevelopment.servermaster.swing.WindowUtils;
 import org.bsdevelopment.servermaster.views.ViewHandler;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.math.BigDecimal;
 
 public class AppSettingsDialog extends Dialog {
     private final ServerConsoleView consoleView;
@@ -45,7 +49,9 @@ public class AppSettingsDialog extends Dialog {
         dialogLayout.setPadding(true);
         dialogLayout.setSpacing(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        dialogLayout.getStyle().set("width", "30rem").set("max-width", "100%");
+        dialogLayout.getStyle().set("width", "50rem").set("max-width", "100%");
+
+        HorizontalLayout javaLayout = new HorizontalLayout();
 
         // Server Location handle
         {
@@ -73,6 +79,68 @@ public class AppSettingsDialog extends Dialog {
             dialogLayout.add(serverFolder);
         }
 
+        // Server Ram
+        {
+            NumberField ramField = new NumberField("Server Ram");
+            ramField.setHelperText("Max ram available: "+App.MAX_RAM);
+            ramField.addThemeVariants(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
+            ramField.setStep(512);
+            ramField.setMin(512);
+            ramField.setMax(App.MAX_RAM);
+            ramField.setValue(Double.valueOf(AppConfig.ram));
+            ramField.setLabel("Server Ram");
+            ramField.setStepButtonsVisible(true);
+            ramField.addValueChangeListener(event -> {
+                int ram = BigDecimal.valueOf(event.getValue()).intValue();
+                if (ram < 512) {
+                    ramField.setErrorMessage("Value can not be below 512");
+                    return;
+                }
+                if (ram > App.MAX_RAM) {
+                    ramField.setErrorMessage("Value can't exceed your free memory of: "+App.MAX_RAM);
+                    return;
+                }
+                ramField.setErrorMessage("");
+
+                AppConfig.ram = ram;
+                App.saveConfig();
+            });
+            dialogLayout.add(ramField);
+        }
+
+        dialogLayout.add(new Hr());
+        // Java Settings
+        {
+            NativeLabel label = new NativeLabel("Java Executable Path");
+            label.getStyle()
+                    .set("color", "var(--lumo-secondary-text-color)")
+                    .set("font-size", "var(--lumo-font-size-s)")
+                    .set("line-height", "1")
+                    .set("font-weight", "500");
+            dialogLayout.add(label);
+
+            javaPath = new TextField();
+            javaPath.setPlaceholder("Java Executable");
+            javaPath.setValue(((AppConfig.javaPath == null) || AppConfig.javaPath.isEmpty()) ? ViewHandler.JAVA_MANAGER.getPrimaryInstallation().getJavaExecutable().getAbsolutePath() : AppConfig.javaPath);
+            javaPath.addValueChangeListener(event -> {
+                AppConfig.javaPath = event.getValue();
+                App.saveConfig();
+            });
+
+            Button detect = new Button("Detect Java");
+            detect.addClickListener(event -> ViewHandler.JAVA_VERSION.open());
+
+            javaLayout.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+            javaLayout.add(javaPath, detect);
+            javaLayout.expand(javaPath);
+            javaLayout.setPadding(false);
+            javaLayout.setSpacing(false);
+
+            dialogLayout.add(javaLayout);
+        }
+
+        dialogLayout.add(new Hr());
+
         // Dev mode toggle
         {
             Checkbox devMode = new Checkbox("App Developer Mode");
@@ -84,23 +152,6 @@ public class AppSettingsDialog extends Dialog {
                 App.saveConfig();
             });
             dialogLayout.add(devMode);
-        }
-
-        // Java Settings
-        {
-            javaPath = new TextField("Java Executable");
-            javaPath.setValue(ViewHandler.JAVA_MANAGER.getPrimaryInstallation().getJavaExecutable().getAbsolutePath());
-
-            Button detect = new Button("Detect Java");
-            detect.addClickListener(event -> ViewHandler.JAVA_VERSION.open());
-
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-            layout.add(javaPath, detect);
-            layout.expand(javaPath);
-            layout.setPadding(false);
-
-            dialogLayout.add(layout);
         }
 
         return dialogLayout;
@@ -116,7 +167,7 @@ public class AppSettingsDialog extends Dialog {
             fileChooser.setCurrentDirectory(new File(AppConfig.serverPath));
         fileChooser.setDialogTitle("Select Server Location");
 
-        Pair<Color, Color> theme = WindowUtils.LOADING_WINDOW.getTheme();
+        Pair<Color, Color> theme = App.LOADING_WINDOW.getTheme();
         fileChooser.setBackground(theme.getLeft());
         fileChooser.setForeground(theme.getRight());
 
