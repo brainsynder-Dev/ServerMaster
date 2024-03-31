@@ -23,7 +23,6 @@ import org.bsdevelopment.servermaster.server.ServerHandlerAPI;
 import org.bsdevelopment.servermaster.server.ServerWrapper;
 import org.bsdevelopment.servermaster.server.jar.ServerJar;
 import org.bsdevelopment.servermaster.server.jar.ServerJarManager;
-import org.bsdevelopment.servermaster.swing.WindowUtils;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
 import org.bsdevelopment.servermaster.views.MainLayout;
 import org.bsdevelopment.servermaster.views.ViewHandler;
@@ -58,6 +57,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         RESTART.setEnabled(value);
         FORCE_STOP.setEnabled(value);
     }
+
     // Disable all server selections
     private void toggleSelections(boolean value) {
         SERVER_TYPE.setEnabled(value);
@@ -73,7 +73,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         }
     }
 
-    private void fillVersions () {
+    private void fillVersions() {
         if (START_SERVER.isEnabled()) START_SERVER.setEnabled(false);
         versionBuildMap.clear();
         ServerJarManager jarManager = App.getJarManager();
@@ -84,13 +84,13 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
             String finalVersion = version.toString();
             if (!alreadyAdded.contains(finalVersion)) alreadyAdded.add(finalVersion);
         });
-        if (alreadyAdded.isEmpty()) Notification.show("No versions were found for "+SERVER_TYPE.getValue());
+        if (alreadyAdded.isEmpty()) Notification.show("No versions were found for " + SERVER_TYPE.getValue());
 
         Collections.reverse(alreadyAdded);
         SERVER_VERSION.setItems(alreadyAdded);
     }
 
-    private void fillBuilds () {
+    private void fillBuilds() {
         SERVER_BUILD.clear();
 
         LinkedList<ServerJar> jars = App.getJarManager().getVersionBuilds(SERVER_TYPE.getValue(), SERVER_VERSION.getValue());
@@ -112,7 +112,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         SERVER_BUILD.setItems(builds);
     }
 
-    public void handleFieldUpdates () {
+    public void handleFieldUpdates() {
         SERVER_TYPE.setPlaceholder("Select Server Type");
         SERVER_TYPE.clear();
 
@@ -163,7 +163,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
                 if ((typeChangeEvent.getValue() == null) || typeChangeEvent.getValue().isEmpty()) return;
 
-                fillVersions ();
+                fillVersions();
             });
         }
 
@@ -179,7 +179,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
             SERVER_VERSION.addValueChangeListener(versionChangeEvent -> {
                 if ((versionChangeEvent.getValue() == null) || versionChangeEvent.getValue().isEmpty()) return;
-                fillBuilds ();
+                fillBuilds();
             });
         }
 
@@ -187,7 +187,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         {
             if ((!AppConfig.serverBuild.equals(SERVER_BUILD.getValue()))
                     && (!AppConfig.serverBuild.isEmpty()) && SERVER_BUILD.isEmpty()
-                    && versionBuildMap.containsKey(SERVER_TYPE.getValue()+"-"+SERVER_VERSION.getValue())) {
+                    && versionBuildMap.containsKey(SERVER_TYPE.getValue() + "-" + SERVER_VERSION.getValue())) {
                 if (SERVER_BUILD.getListDataView().contains(AppConfig.serverBuild)) {
                     SERVER_BUILD.setValue(AppConfig.serverBuild);
 
@@ -230,10 +230,11 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         });
 
         AppUtilities.getDelayedMessages().forEach(System.out::println);
+        AppUtilities.CONSOLE_READY = true;
 
         // Server is not running disable un-used sections
         toggleALL(false);
-        handleFieldUpdates ();
+        handleFieldUpdates();
 
         START_SERVER.addClickListener(buttonClickEvent -> {
             if (!START_SERVER.isEnabled()) return;
@@ -246,6 +247,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
             handleStartup();
         });
     }
+
     private void handleStartup() {
         SERVER_LOG.getLayout().removeAll();
 
@@ -258,7 +260,8 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         int port = ServerHandlerAPI.startServer(SERVER_TYPE.getValue(), version, build, (server, statusCode) -> {
             if (statusCode == 0) AppUtilities.logMessage("[SERVER-MASTER]: The server was stopped");
             if (statusCode == 1) AppUtilities.logMessage("[SERVER-MASTER]: The server was force stopped");
-            if (statusCode == 2) AppUtilities.logMessage("[SERVER-MASTER]: Unknown error prevented server from starting");
+            if (statusCode == 2)
+                AppUtilities.logMessage("[SERVER-MASTER]: Unknown error prevented server from starting");
         });
         System.out.println();
         AppUtilities.logMessage("[SERVER-MASTER]: Started server on: localhost:" + port);
@@ -343,8 +346,6 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
                     .set("border-radius", "15px")
                     .set("background-color", "var(--lumo-tint-5pct)");
 
-            System.out.println("[SERVER-MASTER]: Loading data...");
-
             layout1.add(SERVER_LOG);
 
             {
@@ -374,7 +375,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
             getContent().add(layout1);
         }
 
-        WindowUtils.updateTheme();
+        AppUtilities.updateTheme();
 
         COMMAND_FIELD.addKeyPressListener(Key.ENTER, keyPressEvent -> {
             String text = COMMAND_FIELD.getValue();
@@ -444,7 +445,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         handleFields(event.getUI());
 
         AppUtilities.logMessage("[SERVER-MASTER]: Finished loading all server jars");
-        AppUtilities.logMessage("[SERVER-MASTER]: Found "+App.getJarManager().getTotalServerJars()+" different types/versions to pick from");
+        AppUtilities.logMessage("[SERVER-MASTER]: Found " + App.getJarManager().getTotalServerJars() + " different types/versions to pick from");
         AppUtilities.logMessage("[SERVER-MASTER]: ");
         AppUtilities.logMessage("[SERVER-MASTER]: *** Type '??' to get help with the console ***");
         AppUtilities.logMessage("[SERVER-MASTER]: ");
@@ -452,9 +453,16 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         addAttachListener(event1 -> {
             App.showApplication();
         });
+
+        // TODO: This might have to be looked into...
+        addDetachListener(event1 -> {
+            event1.getUI().getPage().reload();
+
+            AppUtilities.logMessage("[WARNING]", "Application encountered an error", "Please re-open the application");
+        });
     }
 
-    private void handleDialogs () {
+    private void handleDialogs() {
         ViewHandler.APP_SETTINGS = new AppSettingsDialog(this);
         ViewHandler.INSTALLER = new InstallerDialog(this);
         ViewHandler.JAVA_VERSION = new JavaVersionDialog(this);
@@ -465,7 +473,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         return apiService;
     }
 
-    public void updateServerPath (String path) {
+    public void updateServerPath(String path) {
         App.getJarManager().updateRepo(((path == null) || path.isEmpty()) ? null : new File(path));
 
         SERVER_LOG.getLayout().removeAll();
@@ -479,7 +487,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         }
 
         AppUtilities.logMessage("[SERVER-MASTER]: Finished loading all server jars");
-        AppUtilities.logMessage("[SERVER-MASTER]: Found "+App.getJarManager().getTotalServerJars()+" different types/versions to pick from");
+        AppUtilities.logMessage("[SERVER-MASTER]: Found " + App.getJarManager().getTotalServerJars() + " different types/versions to pick from");
         AppUtilities.logMessage("[SERVER-MASTER]: ");
         AppUtilities.logMessage("[SERVER-MASTER]: *** Type '??' to get help with the console ***");
         AppUtilities.logMessage("[SERVER-MASTER]: ");
