@@ -15,14 +15,15 @@ import com.vaadin.flow.component.select.Select;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.AppConfig;
-import org.bsdevelopment.servermaster.swing.WindowUtils;
+import org.bsdevelopment.servermaster.utils.AdvString;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
-import org.bsdevelopment.servermaster.views.data.DownloadThread;
 import org.bsdevelopment.servermaster.views.data.ServerTypeBuild;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 
 public class InstallerDialog extends Dialog {
@@ -104,9 +105,7 @@ public class InstallerDialog extends Dialog {
                 });
 
                 buildSelect.addValueChangeListener(event1 -> {
-                    if (!type.equals("pufferfish")) {
-                        installButton.setEnabled(true);
-                    }
+                    installButton.setEnabled(true);
                 });
             });
 
@@ -142,23 +141,62 @@ public class InstallerDialog extends Dialog {
                 }
                 progressContainer.setVisible(true);
 
-                File file = new File(folder, type+"-"+version+"-"+build.build()+".jar");
-
                 UI ui = UI.getCurrent();
-                consoleView.getApiService().getConnection(build.jar()).whenComplete((pair, throwable) -> {
-                    new DownloadThread(file, pair.getLeft(), ui, progress, () -> {
-                        installButton.setEnabled(false);
-                        progressContainer.setVisible(false);
-                        progress.setValue(0);
-                        consoleView.updateServerPath(AppConfig.serverPath);
-                        Notification.show("Install has been completed for '"+file.getName()+"'");
-                    }).start();
-                });
+                String url = build.jar();
+                if (type.equalsIgnoreCase("pufferfish")) {
+                    consoleView.getApiService().getPufferfishUrl(version, build.build()).whenComplete((s, throwable1) -> {
+                        consoleView.getApiService().getConnection(s).whenComplete((pair, throwable) -> {
+                            handleDownload(ui, progress, progressContainer, folder, type, AdvString.between("pufferfish-paperclip-", "-R0", s), build.build(), pair.getLeft());
+                        });
+                    });
+                }else{
+                    consoleView.getApiService().getConnection(url).whenComplete((pair, throwable) -> {
+                        handleDownload(ui, progress, progressContainer, folder, type, version, build.build(), pair.getLeft());
+                    });
+                }
             });
         }
 
         return dialogLayout;
     }
+
+    private void handleDownload (UI ui, ProgressBar progress, Div progressContainer, File folder, String type, String version, String build, HttpURLConnection connection) {
+        try {
+            File file = new File(folder, type+"-"+version+"-"+build+".jar");
+
+            String fileName = file.getName();
+
+            AppUtilities.downloadFile(connection, file, integer -> ui.access(() -> progress.setValue(integer)), () -> {
+                ui.access(() -> {
+                    installButton.setEnabled(false);
+                    progressContainer.setVisible(false);
+                    progress.setValue(0);
+
+                    consoleView.updateServerPath(AppConfig.serverPath);
+                    Notification.show("Install has been completed for '"+fileName+"'");
+                });
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    /*
+
+                        if (type.equalsIgnoreCase("pufferfish")) {
+                            System.out.println("Pufferfish download...");
+                            System.out.println("ContentType: "+connection.getHeaderField("Content-Type"));
+                            System.out.println("Content-Location: "+connection.getHeaderField("Content-Location"));
+                            System.out.println("filename: "+connection.getHeaderField("filename"));
+                            String fieldValue = connection.getHeaderField("Content-Disposition");
+                            System.out.println("Fields: "+fieldValue);
+                            if (fieldValue != null && fieldValue.contains("filename=\"")) {
+                                String filename = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10, fieldValue.length() - 2);
+                                System.out.println("Filename: "+filename);
+                                String version1 = AdvString.between("-1.", "-R", filename);
+                                file = new File(folder, type+"-1."+version1+"-"+build.build()+".jar");
+                            }
+                        }
+     */
 
     private void updateServerPath (String path) {
         App.getJarManager().updateRepo(((path == null) || path.isEmpty()) ? null : new File(path));
@@ -186,7 +224,7 @@ public class InstallerDialog extends Dialog {
             fileChooser.setCurrentDirectory(new File(AppConfig.serverPath));
         fileChooser.setDialogTitle("Select Server Location");
 
-        Pair<Color, Color> theme = WindowUtils.LOADING_WINDOW.getTheme();
+        Pair<Color, Color> theme = App.LOADING_WINDOW.getTheme();
         fileChooser.setBackground(theme.getLeft());
         fileChooser.setForeground(theme.getRight());
 

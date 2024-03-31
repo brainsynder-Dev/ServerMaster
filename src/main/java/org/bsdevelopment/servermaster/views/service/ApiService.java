@@ -48,6 +48,13 @@ public class ApiService {
         return CompletableFuture.completedFuture(versions);
     }
 
+    public CompletableFuture<String> getPufferfishUrl (String version, String build) {
+        String url = "https://bsdevelopment.org/api/admin/pufferfish-download-url/"+version+"/"+build;
+        String result = sendGetRequest(url, false);
+
+        return CompletableFuture.completedFuture(Json.parse(result).asObject().get("url").asString());
+    }
+
     public CompletableFuture<Pair<HttpURLConnection, Long>> getConnection (String rawUrl) {
         try {
             URL url = new URL(rawUrl);
