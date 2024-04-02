@@ -5,7 +5,9 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.bsdevelopment.servermaster.App;
+import org.bsdevelopment.servermaster.utils.AdvString;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
+import org.bsdevelopment.servermaster.utils.SpaceBreak;
 
 import java.awt.*;
 import java.io.*;
@@ -215,6 +217,12 @@ public class MessageConsole {
                 if (finalMessage.get().contains("@U5")) {
                     for (int i = 0; i != 12; i++) layout.add(AppUtilities.unicodeSpan("unicode-horizontal", color.get()));
                     finalMessage.set(finalMessage.get().replace("@U5", ""));
+                }
+
+                if (finalMessage.get().contains("@SPACE")) {
+                    String spacing = AdvString.between("@SPACE", "@", finalMessage.get());
+                    layout.add(new SpaceBreak(spacing+"px"));
+                    finalMessage.set(finalMessage.get().replace("@SPACE"+spacing+"@", ""));
                 }
 
                 Span text = new Span(finalMessage.get());
