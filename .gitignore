@@ -89,3 +89,5 @@ out
 pnpmfile.js
 .npmrc
 frontend/generated
+/src/main/bundles/
+TestClass.java
