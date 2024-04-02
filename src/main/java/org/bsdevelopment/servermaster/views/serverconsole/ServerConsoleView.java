@@ -8,12 +8,15 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -319,7 +322,39 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
                 rightLayout.add(STOP_BUTTON, RESTART, FORCE_STOP);
             }
 
-            topLayout.add(SERVER_TYPE, SERVER_VERSION, SERVER_BUILD, rightLayout);
+            Span reloadRepo = new Span();
+            {
+                reloadRepo.addClassName("pointer");
+                reloadRepo.add(VaadinIcon.REFRESH.create());
+                reloadRepo.getStyle().set("padding", "4px").set("padding-bottom", "10px").set("padding-left", "30px");
+                reloadRepo.addClickListener(spanClickEvent -> {
+                    if (ServerWrapper.getInstance().isServerRunning()) {
+                        AppUtilities.sendNotification(
+                                "Unable to refresh server jars while server is running",
+                                NotificationVariant.LUMO_ERROR
+                        );
+                        return;
+                    }
+
+                    updateServerPath(App.getJarManager().getRepo().getAbsolutePath());
+                    SERVER_TYPE.clear();
+                    SERVER_VERSION.setEnabled(false);
+                    SERVER_VERSION.clear();
+
+                    SERVER_BUILD.setEnabled(false);
+                    SERVER_BUILD.setVisible(false);
+                    SERVER_BUILD.clear();
+                    versionBuildMap.clear();
+                });
+
+
+                Tooltip.forComponent(reloadRepo)
+                        .withText("Refresh Server Jars")
+                        .withPosition(Tooltip.TooltipPosition.END_BOTTOM);
+            }
+
+            topLayout.add(SERVER_TYPE, SERVER_VERSION, SERVER_BUILD, reloadRepo, rightLayout);
+            topLayout.setAlignSelf(FlexComponent.Alignment.END, reloadRepo);
             getContent().add(topLayout);
         }
 
