@@ -421,38 +421,26 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
             // Display help information
             if ("??".equalsIgnoreCase(text)) {
-                AppUtilities.logMessage("[SM]  Master Commands:");
-                AppUtilities.logMessage("[SM]  ?? welcome");
-                AppUtilities.logMessage("[SM]     Will explain how to use the application in simple steps");
-                AppUtilities.logMessage("[SM]  ?? jar");
-                AppUtilities.logMessage("[SM]     Will explain how to name the server jar files");
-                AppUtilities.logMessage("[SM]  ?? clear");
-                AppUtilities.logMessage("[SM]     Will clear the console window of all text");
-                return;
-            }
-
-            if ("?? welcome".equalsIgnoreCase(text)) {
-                AppUtilities.logMessage("[SM] ");
-                AppUtilities.logMessage("[SM]  How to use the Server Master");
-                AppUtilities.logMessage("[SM]  - Make sure you have server jar files in the folder");
-                AppUtilities.logMessage("[SM]    Also make sure you have all the server files in the same folder");
-                AppUtilities.logMessage("[SM]    Like the plugins/world folder as well as all the configuration files");
-                AppUtilities.logMessage("[SM]  - Right Click in the center");
-                AppUtilities.logMessage("[SM]  - Hover over what type of server you want to run");
-                AppUtilities.logMessage("[SM]  - Click the version you want to run for that server type");
-                AppUtilities.logMessage("[SM]   The Application will automatically change what world is used");
-                AppUtilities.logMessage("[SM]   based on what version of server you are running, everything else");
-                AppUtilities.logMessage("[SM]   is shared between all the versions (plugins & configs)");
-                AppUtilities.logMessage("[SM] ");
+                AppUtilities.logMessage(AppUtilities.LogPrefix.COMMAND, "ServerMaster Commands", Arrays.asList(
+                        "?? jar     - Explains how to setup server jar files",
+                        "?? clear   - Clears the console log of all text"
+                ));
                 return;
             }
 
             if ("?? jar".equalsIgnoreCase(text)) {
-                AppUtilities.logMessage("[SM]  How to add server jar files:");
-                AppUtilities.logMessage("[SM]  - Simply drag and drop the selected server's jar file");
-                AppUtilities.logMessage("[SM]  - Rename the jar file into this format: ServerType-MCVersion.jar");
-                AppUtilities.logMessage("[SM]    Example: spigot-1.18.2.jar");
-                AppUtilities.logMessage("[SM]  - Once you add a new jar file you will need to restart the application");
+                AppUtilities.logMessage(AppUtilities.LogPrefix.COMMAND, "Jar Formatting", Arrays.asList(
+                        "Jar files should always be placed into the "+App.getJarManager().getRepo().getAbsolutePath()+" folder",
+                        "and they can have one of two different name styles:",
+                        "- TYPE-VERSION.jar - Where the TYPE is what type of server it is and VERSION is the MC version",
+                        "@SPACE20@ Example: spigot-1.20.4.jar",
+                        "- TYPE-VERSION-BUILD.jar - Same info above, except BUILD is a unique identifier for this jar",
+                        "@SPACE20@ Example: paper-1.20.4-463.jar",
+                        "The BUILD identifier can be a multitude of things such as a build number, commit hash, or plain text",
+                        "",
+                        "Once you setup the jar file you can click the 'Refresh Server Jars' button",
+                        "It will then refresh the stored data and update the jars with the new data"
+                ));
                 return;
             }
 
