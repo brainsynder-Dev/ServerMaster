@@ -150,6 +150,11 @@
             <version>1.4.2</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core</artifactId>
+            <version>6.5.0</version>
+        </dependency>
         <!-- https://github.com/jcefmaven/jcefmaven -->
         <dependency>
             <groupId>me.friwi</groupId>

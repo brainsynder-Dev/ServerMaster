@@ -18,6 +18,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.AppConfig;
+import org.bsdevelopment.servermaster.utils.system.SystemUtilities;
 import org.bsdevelopment.servermaster.views.ViewHandler;
 
 import javax.swing.*;
@@ -82,11 +83,11 @@ public class AppSettingsDialog extends Dialog {
         // Server Ram
         {
             NumberField ramField = new NumberField("Server Ram");
-            ramField.setHelperText("Max ram available: "+App.MAX_RAM);
+            ramField.setHelperText("Max ram available: "+ SystemUtilities.convertToStringRepresentation(App.MAX_RAM));
             ramField.addThemeVariants(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
             ramField.setStep(512);
             ramField.setMin(512);
-            ramField.setMax(App.MAX_RAM);
+            ramField.setMax(App.MAX_MB_RAM);
             ramField.setValue(Double.valueOf(AppConfig.ram));
             ramField.setLabel("Server Ram");
             ramField.setStepButtonsVisible(true);
@@ -96,8 +97,8 @@ public class AppSettingsDialog extends Dialog {
                     ramField.setErrorMessage("Value can not be below 512");
                     return;
                 }
-                if (ram > App.MAX_RAM) {
-                    ramField.setErrorMessage("Value can't exceed your free memory of: "+App.MAX_RAM);
+                if (ram > App.MAX_MB_RAM) {
+                    ramField.setErrorMessage("Value can't exceed your free memory of: "+App.MAX_MB_RAM);
                     return;
                 }
                 ramField.setErrorMessage("");

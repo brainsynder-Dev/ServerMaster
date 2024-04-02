@@ -11,6 +11,8 @@ import org.bsdevelopment.servermaster.swing.LoadingWindow;
 import org.bsdevelopment.servermaster.swing.Swing;
 import org.bsdevelopment.servermaster.swing.Window;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
+import org.bsdevelopment.servermaster.utils.system.MemoryUnit;
+import org.bsdevelopment.servermaster.utils.system.SystemUtilities;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
@@ -51,7 +53,8 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
 
     private static AppConfig CONFIG;
     private static ServerJarManager jarManager;
-    public static int MAX_RAM;
+    public static long MAX_MB_RAM;
+    public static long MAX_RAM;
     public static LoadingWindow LOADING_WINDOW;
 
     public static void main(String[] args) throws IOException {
@@ -76,7 +79,8 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
                     e.getMessage()
             ));
         }
-        MAX_RAM = (int) (Runtime.getRuntime().freeMemory() / 125000);
+        MAX_RAM = SystemUtilities.getSystemInfo().getHardware().getMemory().getAvailable();
+        MAX_MB_RAM = MemoryUnit.MEGABYTE.convert(MAX_RAM);
         jarManager = new ServerJarManager(new File(AppConfig.serverPath));
 
         SpringApplication springApp = new SpringApplication(App.class);
