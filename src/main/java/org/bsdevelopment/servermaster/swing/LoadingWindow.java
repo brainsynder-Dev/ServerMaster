@@ -93,11 +93,7 @@ public class LoadingWindow extends JFrame {
     public IProgressHandler getProgressHandler() {
         final Logger logger = Logger.getLogger(ConsoleProgressHandler.class.getName());
         return (state, percent) -> {
-            if (state == EnumProgress.INITIALIZED) {
-                dispose();
-            } else {
-                this.setVisible(true);
-            }
+            if (state == EnumProgress.INITIALIZED) dispose();
 
             Objects.requireNonNull(state, "state cannot be null");
             if (percent == -1.0F || !(percent < 0.0F) && !(percent > 100.0F)) {
