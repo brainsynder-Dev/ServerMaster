@@ -94,14 +94,24 @@ Java 17</li>
 #### Installation
 
 1. Grab the latest [release](https://github.com/brainsynder-Dev/ServerMaster/releases)
-2. Put the `ServerMaster.jar` (or the `ServerMaster.exe`) in a folder that you want the server to be run from
-3. Once you have the `ServerMaster` executable in the folder, proceed to add any server jars you want to use
-4. When adding the server jar files, ensure they follow this pattern: `ServerType-MCVersion.jar` (Example: `spigot-1.18.2.jar`)
-5. Run the server at least once `(If the folder was empty)` after it was run, configure all the main settings for the server
+2. Put the `ServerMaster.jar` (or the `ServerMaster.exe`) in a folder for itself
+3. Once you have the `ServerMaster` executable in a folder, proceed to running the app and setting the server folders location
+4. Once you have the server folders location set, you can proceed to run our installer if you want a Paper, Purpur, or Pufferfish server
+    - Spigot servers need to be manually added to the folder using the formats provided when you enter the `?? jar` command in the app
+5. After you have your server jar(s) in your server folder, go ahead and setup your ram and java version for the server(s)
+6. After everything is setup go ahead and select which server type, version, and build(if applicable)... then start the server!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+### v1.4.0 New design!
+<details>
+    <summary>Screenshots</summary>
+
+    ![alt text](https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/server-installer.png?raw=true)
+    ![alt text](https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/base-app-image-light.png?raw=true)
+    ![alt text](https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/base-app-image-dark.png?raw=true)
+</details>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -145,14 +155,12 @@ After you have finished with the server you can stop it a few ways such as:
 
 
 <!-- ROADMAP -->
-## Roadmap
+## Roadmap for the future
 
-- [ ] Cleanup the code `(Its a bit of a mess because it was just completed :P)`
-- [x] Theme Selection
-- [x] Server Port Setting
-- [x] EULA set to true by default
-- [x] Console Colorization `(Really need to figure this out...)`
-- [ ] Server Jar Installer
+- [ ] Spigot Installer (Run BuildTools in the same console?)
+- [ ] Customization for server.properties
+- [ ] Move away from using so many Dialog windows
+- [ ] TBD...
 
 Have an idea? Create an enhancement/feature [issue](https://github.com/github_username/repo_name/issues) 
 
