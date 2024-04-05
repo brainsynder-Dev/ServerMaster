@@ -461,6 +461,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        UI.getCurrent().getPage().addStyleSheet("https://assets.bsdevelopment.org/font-awesome/css/all.css");
         UI.getCurrent().getPage().addStyleSheet("https://cdn.bsdevelopment.org/css/unicode-test-6.css");
 
         MessageConsole CONSOLE = new MessageConsole(SERVER_LOG, event.getUI());

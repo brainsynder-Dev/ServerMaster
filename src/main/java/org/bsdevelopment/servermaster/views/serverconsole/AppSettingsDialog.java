@@ -4,8 +4,10 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.icon.FontIcon;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -15,11 +17,14 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.open.Open;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.AppConfig;
+import org.bsdevelopment.servermaster.utils.AppUtilities;
 import org.bsdevelopment.servermaster.utils.system.SystemUtilities;
 import org.bsdevelopment.servermaster.views.ViewHandler;
+import org.bsdevelopment.servermaster.views.service.ApiService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,11 +33,24 @@ import java.math.BigDecimal;
 
 public class AppSettingsDialog extends Dialog {
     private final ServerConsoleView consoleView;
+    private final ApiService apiService;
     private TextField javaPath;
 
-    public AppSettingsDialog (ServerConsoleView consoleView) {
+    public AppSettingsDialog(ServerConsoleView consoleView, ApiService apiService) {
         this.consoleView = consoleView;
-        setHeaderTitle("App Settings");
+        this.apiService = apiService;
+
+        HorizontalLayout top = new HorizontalLayout();
+        top.getStyle().set("padding-bottom", "10px");
+        top.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        top.setAlignItems(FlexComponent.Alignment.CENTER);
+        top.setWidthFull();
+        top.add(new H2("App Settings"));
+
+        Button button = new Button("Report an Issue", (e) -> Open.open("https://github.com/brainsynder-Dev/ServerMaster/issues"));
+        button.setIcon(new FontIcon("fa-brands", "fa-github"));
+        top.add(button);
+        getHeader().add(top);
 
 
         VerticalLayout dialogLayout = createDialogLayout();
@@ -92,7 +110,7 @@ public class AppSettingsDialog extends Dialog {
         // Server Ram
         {
             NumberField ramField = new NumberField("Server Ram");
-            ramField.setHelperText("Max ram available: "+ SystemUtilities.convertToStringRepresentation(App.MAX_RAM));
+            ramField.setHelperText("Max ram available: " + SystemUtilities.convertToStringRepresentation(App.MAX_RAM));
             ramField.addThemeVariants(TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
             ramField.setStep(512);
             ramField.setMin(512);
@@ -107,7 +125,7 @@ public class AppSettingsDialog extends Dialog {
                     return;
                 }
                 if (ram > App.MAX_MB_RAM) {
-                    ramField.setErrorMessage("Value can't exceed your free memory of: "+App.MAX_MB_RAM);
+                    ramField.setErrorMessage("Value can't exceed your free memory of: " + App.MAX_MB_RAM);
                     return;
                 }
                 ramField.setErrorMessage("");

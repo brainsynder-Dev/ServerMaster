@@ -5,6 +5,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.FontIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -185,7 +186,7 @@ public class MainLayout extends AppLayout {
         {
             Span themeChange = new Span();
             themeChange.addClassName("pointer");
-            themeChange.add(VaadinIcon.PAINTBRUSH.create());
+            themeChange.add(new FontIcon("fa-solid", "fa-palette"));
             themeChange.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
             themeChange.addClickListener(spanClickEvent -> {
                 AppConfig.lightTheme = !AppConfig.lightTheme;
