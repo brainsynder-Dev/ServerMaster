@@ -1,5 +1,8 @@
 package org.bsdevelopment.servermaster.utils;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Span;
@@ -13,10 +16,15 @@ import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.theme.lumo.Lumo;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.AppConfig;
+import org.bsdevelopment.servermaster.server.utils.Version;
+import org.bsdevelopment.servermaster.utils.records.UpdateInfo;
 
 import java.awt.*;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -88,6 +96,43 @@ public class AppUtilities {
             return;
         }
         DELAYED_MESSAGES.addLast(message);
+    }
+
+    public static UpdateInfo fetchUpdateInfo () {
+        try {
+            String result = sendGetRequest("https://api.github.com/repos/brainsynder-Dev/ServerMaster/releases", false);
+            JsonArray releaseArray = Json.parse(result).asArray();
+            JsonObject update = releaseArray.get(0).asObject();
+
+            Version version = Version.parse(update.get("tag_name").asString().replaceFirst("v", ""));
+            String releaseUrl = update.get("html_url").asString();
+            String title = update.get("name").asString();
+            String markdown = update.get("body").asString();
+
+            return new UpdateInfo (releaseUrl, title, version, markdown);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String sendGetRequest (String rawUrl, boolean allowRedirects) {
+        try {
+            URL url = new URL(rawUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setInstanceFollowRedirects(allowRedirects);
+            connection.setRequestMethod("GET");
+            connection.setUseCaches(false);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
+
+            try (InputStream inputStream = connection.getInputStream()) {
+                return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            return "";
+        }
     }
 
     private static void appendToLogFile(String content)  {
@@ -188,6 +233,11 @@ public class AppUtilities {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setSpacing(false);
         return layout;
+    }
+
+    public static Component modifyComponent(Component component, Consumer<Component> consumer) {
+        consumer.accept(component);
+        return component;
     }
 
     public static Span unicodeSpan (String className, String color) {
