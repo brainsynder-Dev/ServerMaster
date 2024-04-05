@@ -7,10 +7,12 @@ import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import org.bsdevelopment.servermaster.server.ServerWrapper;
 import org.bsdevelopment.servermaster.server.jar.ServerJarManager;
+import org.bsdevelopment.servermaster.server.utils.Version;
 import org.bsdevelopment.servermaster.swing.LoadingWindow;
 import org.bsdevelopment.servermaster.swing.Swing;
 import org.bsdevelopment.servermaster.swing.Window;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
+import org.bsdevelopment.servermaster.utils.records.UpdateInfo;
 import org.bsdevelopment.servermaster.utils.system.MemoryUnit;
 import org.bsdevelopment.servermaster.utils.system.SystemUtilities;
 import org.springframework.boot.SpringApplication;
@@ -42,20 +44,21 @@ import java.util.Properties;
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 public class App extends SpringBootServletInitializer implements AppShellConfigurator {
     public static final String name = "Server Master";
-    public static ConfigurableApplicationContext context;
-    public static Window siteDisplay;
-    public static int sitePort;
-
     public static final File workingDir = new File(".");
     public static final File tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
     public static final File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static final File LOG_FILE = new File(workingDir + "/latest.log");
 
+    public static ConfigurableApplicationContext context;
+    public static Window siteDisplay;
+    public static int sitePort;
     private static AppConfig CONFIG;
     private static ServerJarManager jarManager;
     public static long MAX_MB_RAM;
     public static long MAX_RAM;
     public static LoadingWindow LOADING_WINDOW;
+    public static Version appVersion;
+    public static UpdateInfo startupUpdateInfo;
 
     public static void main(String[] args) throws IOException {
         if (!LOG_FILE.exists()) {
@@ -66,6 +69,21 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
                         "Failed to create 'latest.log' in the " + LOG_FILE.getParentFile().getName() + " folder",
                         "Chances are the folder does not allow READ/WRITE permissions"
                 );
+            }
+        }
+
+        {
+            try {
+                Properties prop = new Properties();
+                prop.load(App.class.getResourceAsStream("/servermaster.properties"));
+                String ver = prop.getProperty("version");
+                if ((ver != null) && (!"${project.version}".equals(ver))) {
+                    appVersion = Version.parse(ver);
+                }else{
+                    appVersion = null;
+                }
+            }catch (Exception e) {
+                appVersion = null;
             }
         }
 
@@ -102,6 +120,8 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
         Swing.center(siteDisplay);
 
         new ServerWrapper(jarManager);
+
+        startupUpdateInfo = AppUtilities.fetchUpdateInfo();
     }
 
     public static void showApplication() {

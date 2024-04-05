@@ -5,10 +5,12 @@ import org.bsdevelopment.servermaster.views.data.JavaInstallationManager;
 import org.bsdevelopment.servermaster.views.serverconsole.AppSettingsDialog;
 import org.bsdevelopment.servermaster.views.serverconsole.InstallerDialog;
 import org.bsdevelopment.servermaster.views.serverconsole.JavaVersionDialog;
+import org.bsdevelopment.servermaster.views.serverconsole.UpdateDialog;
 
 public class ViewHandler {
 
     public static AppSettingsDialog APP_SETTINGS;
+    public static UpdateDialog UPDATE_DIALOG;
     public static InstallerDialog INSTALLER;
     public static JavaVersionDialog JAVA_VERSION;
 

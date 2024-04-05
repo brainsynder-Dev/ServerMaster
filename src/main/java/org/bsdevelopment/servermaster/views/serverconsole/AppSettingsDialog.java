@@ -43,6 +43,15 @@ public class AppSettingsDialog extends Dialog {
 
         add(dialogLayout);
         getFooter().add(closeButton);
+
+        Button checkUpdate = new Button("Update Check");
+        checkUpdate.addClickListener(clickEvent -> {
+            clickEvent.getSource().getUI().ifPresent(ui -> {
+                ViewHandler.UPDATE_DIALOG.populate(AppUtilities.fetchUpdateInfo());
+            });
+        });
+        checkUpdate.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        getFooter().add(checkUpdate);
     }
 
     private VerticalLayout createDialogLayout() {

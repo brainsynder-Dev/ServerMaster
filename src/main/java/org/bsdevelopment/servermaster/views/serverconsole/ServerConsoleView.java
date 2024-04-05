@@ -488,10 +488,11 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
     }
 
     private void handleDialogs() {
-        ViewHandler.APP_SETTINGS = new AppSettingsDialog(this);
+        ViewHandler.UPDATE_DIALOG = new UpdateDialog();
+        ViewHandler.APP_SETTINGS = new AppSettingsDialog(this, apiService);
         ViewHandler.INSTALLER = new InstallerDialog(this);
         ViewHandler.JAVA_VERSION = new JavaVersionDialog(this);
-        getContent().add(ViewHandler.APP_SETTINGS, ViewHandler.INSTALLER, ViewHandler.JAVA_VERSION);
+        getContent().add(ViewHandler.APP_SETTINGS, ViewHandler.UPDATE_DIALOG, ViewHandler.INSTALLER, ViewHandler.JAVA_VERSION);
     }
 
     public ApiService getApiService() {

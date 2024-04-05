@@ -19,6 +19,7 @@ import org.bsdevelopment.servermaster.AppConfig;
 import org.bsdevelopment.servermaster.server.ServerWrapper;
 import org.bsdevelopment.servermaster.swing.DevToolsDialog;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
+import org.bsdevelopment.servermaster.utils.records.UpdateInfo;
 
 import java.util.function.Consumer;
 
@@ -230,7 +231,6 @@ public class MainLayout extends AppLayout {
             Span appSettings = new Span();
             appSettings.addClassName("pointer");
             appSettings.add(VaadinIcon.COG_O.create());
-            appSettings.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
             appSettings.addClickListener(spanClickEvent -> {
                 if (ServerWrapper.getInstance().isServerRunning()) {
                     AppUtilities.sendNotification(
@@ -247,7 +247,39 @@ public class MainLayout extends AppLayout {
             Tooltip.forComponent(appSettings)
                     .withText("Configure App Settings")
                     .withPosition(Tooltip.TooltipPosition.END_BOTTOM);
-            layout1.add(appSettings);
+
+            if (App.appVersion != null) {
+                UpdateInfo info = App.startupUpdateInfo;
+
+                int compare = App.appVersion.compareTo(info.version());
+
+                if (compare == -1) {
+                    Span counter = new Span();
+                    counter.getStyle().set("position", "absolute")
+                            .set("top", "0")
+                            .set("right", "0")
+                            .set("border-radius", "90px")
+                            .set("color", "var(--lumo-text-color)")
+                            .set("background-color", "var(--lumo-error-color)")
+                            .set("font-size", "13px")
+                            .set("padding", "5px")
+                            .set("border", "2px var(--lumo-success-color) solid");
+
+                    String counterLabel = "NEW UPDATE AVAILABLE";
+                    counter.getElement().setAttribute("aria-label", counterLabel);
+                    counter.getElement().setAttribute("title", counterLabel);
+
+                    Div div = new Div(appSettings, counter);
+                    div.getStyle().set("border", "solid #121A24 1px").set("padding", "4px").set("display", "inline-block").set("position", "relative");
+                    layout1.add(div);
+                }else{
+                    appSettings.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
+                    layout1.add(appSettings);
+                }
+            }else{
+                appSettings.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
+                layout1.add(appSettings);
+            }
         }
 
         header.add(layout1);
