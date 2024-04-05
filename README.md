@@ -71,9 +71,12 @@ Well anyone could technically use this, I personally was aiming this for plugin 
 
 ### Built With
 
-* ![Java][Java]
-* ![JavaSwing][JavaSwing]
-* ![IntelliJ][IntelliJ]
+<li style="display: flex; align-items:center; gap:10px"><img src="./src/main/resources/images/readme/java-logo.png" alt="Java" height="32"/>
+Java 17</li>
+<li style="display: flex; align-items:center; padding-top:10px; gap:10px"><img src="./src/main/resources/images/readme/intellij-logo.png" alt="Java" height="32"/>
+<a href="https://www.jetbrains.com/idea/">IntelliJ</a></li>
+<li style="display: flex; align-items:center; padding-top:10px; gap:10px"><img src="./src/main/resources/images/readme/vaadin.png" alt="Java" height="32"/>
+<a href="https://vaadin.com/flow">Vaadin</a> 24</li>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -85,7 +88,8 @@ Well anyone could technically use this, I personally was aiming this for plugin 
 #### Prerequisites
 
 * Java 17
-* At least 1 server jar (It is useless without it)
+* A Folder for the application
+* A Folder for all the server content
 
 #### Installation
 
@@ -213,8 +217,8 @@ None yet...
 [issues-url]: https://github.com/brainsynder-Dev/ServerMaster/issues
 [license-shield]: https://img.shields.io/github/license/brainsynder-Dev/ServerMaster.svg?style=for-the-badge
 [license-url]: https://github.com/brainsynder-Dev/ServerMaster/blob/master/LICENSE
-[product-screenshot]: https://i.imgur.com/39sflQ2.png
+[product-screenshot]: ./src/main/resources/images/app-images/base-app-image-dark.png
 
 [IntelliJ]: https://img.shields.io/badge/IntelliJIDEA-000000.svg?style=for-the-badge&logo=intellij-idea&logoColor=white
-[Java]: https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white
+[Java]: ./src/main/resources/images/java-logo.png
 [JavaSwing]: https://img.shields.io/badge/java%20swing-%239999FF.svg?style=for-the-badge&logoColor=white
