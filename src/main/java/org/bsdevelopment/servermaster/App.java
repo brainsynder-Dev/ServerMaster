@@ -57,7 +57,7 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
     public static long MAX_MB_RAM;
     public static long MAX_RAM;
     public static LoadingWindow LOADING_WINDOW;
-    public static Version appVersion;
+    public static Version appVersion = Version.parse("1.4.0");
     public static UpdateInfo startupUpdateInfo;
 
     public static void main(String[] args) throws IOException {
@@ -69,21 +69,6 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
                         "Failed to create 'latest.log' in the " + LOG_FILE.getParentFile().getName() + " folder",
                         "Chances are the folder does not allow READ/WRITE permissions"
                 );
-            }
-        }
-
-        {
-            try {
-                Properties prop = new Properties();
-                prop.load(App.class.getResourceAsStream("/servermaster.properties"));
-                String ver = prop.getProperty("version");
-                if ((ver != null) && (!"${project.version}".equals(ver))) {
-                    appVersion = Version.parse(ver);
-                }else{
-                    appVersion = null;
-                }
-            }catch (Exception e) {
-                appVersion = null;
             }
         }
 
