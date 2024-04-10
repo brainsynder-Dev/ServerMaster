@@ -186,7 +186,7 @@ public class MainLayout extends AppLayout {
         {
             Span themeChange = new Span();
             themeChange.addClassName("pointer");
-            themeChange.add(new FontIcon("fa-solid", "fa-palette"));
+            themeChange.add(AppUtilities.OFFLINE ? VaadinIcon.PAINTBRUSH.create() : new FontIcon("fa-solid", "fa-palette"));
             themeChange.getStyle().set("border", "solid #121A24 1px").set("padding", "4px");
             themeChange.addClickListener(spanClickEvent -> {
                 AppConfig.lightTheme = !AppConfig.lightTheme;
@@ -225,7 +225,7 @@ public class MainLayout extends AppLayout {
             Tooltip.forComponent(installer)
                     .withText("Install Server Jars")
                     .withPosition(Tooltip.TooltipPosition.END_BOTTOM);
-            layout1.add(installer);
+            if (!AppUtilities.OFFLINE) layout1.add(installer);
         }
 
         {
@@ -252,7 +252,7 @@ public class MainLayout extends AppLayout {
             if (App.appVersion != null) {
                 UpdateInfo info = App.startupUpdateInfo;
 
-                int compare = App.appVersion.compareTo(info.version());
+                int compare = (info == null) ? 0 : App.appVersion.compareTo(info.version());
 
                 if (compare == -1) {
                     Span counter = new Span();

@@ -69,7 +69,7 @@ public class AppSettingsDialog extends Dialog {
             });
         });
         checkUpdate.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        getFooter().add(checkUpdate);
+        if (!AppUtilities.OFFLINE) getFooter().add(checkUpdate);
     }
 
     private VerticalLayout createDialogLayout() {

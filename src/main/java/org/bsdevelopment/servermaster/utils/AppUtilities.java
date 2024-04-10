@@ -33,6 +33,7 @@ import java.util.logging.Level;
 
 public class AppUtilities {
     public static boolean CONSOLE_READY = false;
+    public static boolean OFFLINE = false;
     private static final LinkedList<String> DELAYED_MESSAGES = new LinkedList<>();
 
     public static void logMessage (String message) {
@@ -101,6 +102,10 @@ public class AppUtilities {
     public static UpdateInfo fetchUpdateInfo () {
         try {
             String result = sendGetRequest("https://api.github.com/repos/brainsynder-Dev/ServerMaster/releases", false);
+            if (result.isEmpty()) {
+                OFFLINE = true;
+                return null;
+            }
             JsonArray releaseArray = Json.parse(result).asArray();
             JsonObject update = releaseArray.get(0).asObject();
 
@@ -111,7 +116,7 @@ public class AppUtilities {
 
             return new UpdateInfo (releaseUrl, title, version, markdown);
         }catch (Exception e) {
-            e.printStackTrace();
+            delayedLogMessage("Error fetching Update Info: "+e.getMessage());
         }
         return null;
     }

@@ -38,6 +38,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @PageTitle("Server Console")
 // @Route(value = "console", layout = MainLayout.class)
@@ -457,6 +458,20 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
             ServerHandlerAPI.sendServerCommand(text);
         });
         handleDialogs();
+
+        if (AppUtilities.OFFLINE) {
+            String message = """
+                    It appears you are either offline or ran into a connection issue. 
+                    If you think this is an issue please reopen the app 
+                    If it still persists report it: https://github.com/brainsynder-Dev/ServerMaster/issues
+                    """;
+
+            Notification offlineNotification = new Notification(message);
+            offlineNotification.setPosition(Notification.Position.BOTTOM_CENTER);
+            offlineNotification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            offlineNotification.setDuration((int) TimeUnit.MINUTES.toMillis(1));
+            offlineNotification.open();
+        }
     }
 
     @Override
