@@ -57,7 +57,7 @@ public class App extends SpringBootServletInitializer implements AppShellConfigu
     public static long MAX_MB_RAM;
     public static long MAX_RAM;
     public static LoadingWindow LOADING_WINDOW;
-    public static Version appVersion = Version.parse("1.5.0");
+    public static Version appVersion = Version.parse("1.5.1");
     public static UpdateInfo startupUpdateInfo;
 
     public static void main(String[] args) throws IOException {
