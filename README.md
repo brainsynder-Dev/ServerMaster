@@ -1,16 +1,14 @@
 <a name="readme-top"></a>
+<br />
+<div align="center">
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![GNU License][license-shield]][license-url]
-
-
-<br />
-<div align="center">
+[![GNU License][license-shield]][license-url]  
   <a href="https://github.com/brainsynder-Dev/ServerMaster">
-    <img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/icon.png?raw=true" alt="Logo" width="250" height="250">
+    <img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/images/icon.png?raw=true" alt="Logo" width="250" height="250">
   </a>
 
 <h3 align="center">Server Master</h3>
@@ -105,18 +103,14 @@ Java 17</li>
 
 
 ### v1.4.0 New design!
-<details>
-    <summary>Screenshots</summary>
-
-    ![alt text](https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/server-installer.png?raw=true)
-    ![alt text](https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/base-app-image-light.png?raw=true)
-    ![alt text](https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/base-app-image-dark.png?raw=true)
-</details>
+<img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/server-installer.png?raw=true" alt="Logo" width="500" height="250">
+<img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/base-app-image-light.png?raw=true" alt="Logo" width="500" height="250">
+<img src="https://github.com/brainsynder-Dev/ServerMaster/blob/master/src/main/resources/images/app-images/base-app-image-dark.png?raw=true" alt="Logo" width="500" height="250">
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-### How to start a server:
+### How to start a server: (Old GUI same principal)
 <div align="center">
 
 <img src="https://i.imgur.com/z4vW8SQ.png" alt="Initial view" width="412" height="190">
