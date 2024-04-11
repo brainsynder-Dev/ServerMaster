@@ -11,10 +11,9 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.open.Open;
-import com.youbenzi.mdtool.tool.MDTool;
 import org.bsdevelopment.servermaster.App;
 import org.bsdevelopment.servermaster.utils.AppUtilities;
-import org.bsdevelopment.servermaster.utils.ModifiedHtml;
+import org.bsdevelopment.servermaster.utils.markdown.MarkdownArea;
 import org.bsdevelopment.servermaster.utils.records.UpdateInfo;
 
 public class UpdateDialog extends Dialog {
@@ -25,7 +24,7 @@ public class UpdateDialog extends Dialog {
         container = new Div();
 
         VerticalLayout dialogLayout = createDialogLayout();
-
+        setClassName("changelog");
         add(dialogLayout);
     }
 
@@ -67,7 +66,14 @@ public class UpdateDialog extends Dialog {
         top.add(AppUtilities.modifyComponent(new H3(updateInfo.version().toString()), component -> component.getStyle().set("color", "var(--lumo-success-color)")));
         container.add(top);
 
-        container.add(new ModifiedHtml("<div style=\"height: 50rem; overflow: auto;\">"+ MDTool.markdown2Html(updateInfo.markdown())+"</div>"));
+        Div div = new Div();
+        div.getStyle().set("height", "50rem").set("overflow", "auto");
+        MarkdownArea markdown = new MarkdownArea();
+        markdown.setValue(updateInfo.markdown());
+        markdown.previewOnly();
+        div.add(markdown);
+
+        container.add(div);
 
         Button viewRelease = new Button("View Update Release", (e) -> Open.open(updateInfo.releaseUrl()));
         viewRelease.getStyle().set("position", "absolute").set("margin", "20px").set("bottom", "0").set("margin-left", "0").set("width", "46rem").set("padding", "25px");
