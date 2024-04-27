@@ -164,8 +164,6 @@ public class Server {
         options.add(path);
         options.add("--port");
         options.add(String.valueOf(AppConfig.port));
-        options.add("-o");
-        options.add("false");
         options.add("nogui");
         return options;
     }

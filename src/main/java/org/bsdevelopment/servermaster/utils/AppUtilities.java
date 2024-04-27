@@ -164,16 +164,16 @@ public class AppUtilities {
         return builder.toString().toUpperCase();
     }
 
-    public static LinkedList<String> getDelayedMessages() {
-        return DELAYED_MESSAGES;
-    }
-
     public static Color hex2Color(String hex) {
         return new Color(
                 Integer.valueOf(hex.substring(1, 3), 16),
                 Integer.valueOf(hex.substring(3, 5), 16),
                 Integer.valueOf(hex.substring(5, 7), 16)
         );
+    }
+
+    public static LinkedList<String> getDelayedMessages() {
+        return DELAYED_MESSAGES;
     }
 
     public static void downloadFile(URLConnection httpConnection, File file, Consumer<Integer> progressConsumer, Runnable finishTask) throws IOException {
