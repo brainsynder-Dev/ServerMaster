@@ -157,7 +157,13 @@ public class MessageConsole {
             } else if (message.startsWith("[SERVER-MASTER]: ")
                     || message.startsWith("[ServerMaster]")
                     || message.startsWith("[SM]")) {
-                color.set("var(--lumo-success-color)");//new Color(39, 136, 156);
+                color.set("var(--lumo-success-color)");
+                error = false;
+                previousColor = "";
+            }
+
+            if (message.contains(" INFO]: Done (")) {
+                color.set("var(--custom-success-color");
                 error = false;
                 previousColor = "";
             }
