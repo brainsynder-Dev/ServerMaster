@@ -54,6 +54,8 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
     private final TextField COMMAND_FIELD;
     public final ServerLog SERVER_LOG;
 
+    private int historyIndex = -1;
+
     // Server is not running disable un-used sections
     private void toggleALL(boolean value) {
         START_SERVER.setEnabled(value);
@@ -219,7 +221,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         });
         RESTART.addClickListener(clickEvent -> {
             ServerWrapper.getInstance().getServer().getThread().setServerStopCallback((server, statusCode) -> {
-                ui.access(this::handleStartup);
+                ui.access(() -> handleStartup(ui));
             });
             ServerHandlerAPI.stopServer();
         });
@@ -248,11 +250,11 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
             AppConfig.serverBuild = SERVER_BUILD.isVisible() ? SERVER_BUILD.getValue() : "";
             App.saveConfig();
 
-            handleStartup();
+            handleStartup(ui);
         });
     }
 
-    private void handleStartup() {
+    private void handleStartup(UI ui) {
         SERVER_LOG.getLayout().removeAll();
 
         toggleSelections(false);
@@ -264,8 +266,14 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
         int port = ServerHandlerAPI.startServer(SERVER_TYPE.getValue(), version, build, (server, statusCode) -> {
             if (statusCode == 0) AppUtilities.logMessage("[SERVER-MASTER]: The server was stopped");
             if (statusCode == 1) AppUtilities.logMessage("[SERVER-MASTER]: The server was force stopped");
-            if (statusCode == 2)
-                AppUtilities.logMessage("[SERVER-MASTER]: Unknown error prevented server from starting");
+            if (statusCode == 2) AppUtilities.logMessage("[SERVER-MASTER]: Unknown error prevented server from starting");
+            if (statusCode <= 2) {
+                ui.access(() -> {
+                    toggleALL(false);
+                    toggleSelections(true);
+                    START_SERVER.setEnabled(true);
+                });
+            }
         });
         System.out.println();
         AppUtilities.logMessage("[SERVER-MASTER]: Started server on: localhost:" + port);
@@ -461,8 +469,8 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
         if (AppUtilities.OFFLINE) {
             String message = """
-                    It appears you are either offline or ran into a connection issue. 
-                    If you think this is an issue please reopen the app 
+                    It appears you are either offline or ran into a connection issue.
+                    If you think this is an issue please reopen the app
                     If it still persists report it: https://github.com/brainsynder-Dev/ServerMaster/issues
                     """;
 
@@ -477,7 +485,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         UI.getCurrent().getPage().addStyleSheet("https://assets.bsdevelopment.org/font-awesome/css/all.css");
-        UI.getCurrent().getPage().addStyleSheet("https://cdn.bsdevelopment.org/css/unicode-test-10.css");
+        UI.getCurrent().getPage().addStyleSheet("https://cdn.bsdevelopment.org/css/unicode-test-12.css");
 
         MessageConsole CONSOLE = new MessageConsole(SERVER_LOG, event.getUI());
         CONSOLE.redirectErr(Color.RED, null);
