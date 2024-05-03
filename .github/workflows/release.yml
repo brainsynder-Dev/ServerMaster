@@ -7,30 +7,70 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'java' ]
-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
-        # Learn more about CodeQL language support at https://git.io/codeql-language-support
-
     steps:
     - run: echo "previous_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> $GITHUB_ENV
-    - name: Generate changelog
+
+    - name: Generate Changelog
       id: changelog
       uses: jaywcjlove/changelog-generator@main
-      if: env.previous_tag
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        filter-author: (jaywcjlove|小弟调调™|dependabot|renovate\\[bot\\]|dependabot\\[bot\\]|Renovate Bot)
+        head-ref: ${{steps.create_tag.outputs.version}}
+        original-markdown: true
         filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
-    - name: Get the changelog
-      run: echo "${{ steps.changelog.outputs.changelog }}"
+
+    - run: echo "outputs.changelog - ${{ steps.changelog.outputs.changelog }}"
+    - run: echo "outputs.tag - ${{ steps.changelog.outputs.tag }}"
+    - run: echo "outputs.branch - ${{ steps.changelog.outputs.branch }}"
+    - run: echo "outputs.compareurl - ${{ steps.changelog.outputs.compareurl }}"
+    - run: echo "outputs.version - ${{ steps.changelog.outputs.version }}"
+    - run: echo "outputs.gh-pages-hash - ${{ steps.changelog.outputs.gh-pages-hash }}"
+    - run: echo "outputs.gh-pages-hash - ${{ steps.changelog.outputs['gh-pages-hash'] }}"
+    - run: echo "outputs.gh-pages-short-hash - ${{ steps.changelog.outputs.gh-pages-short-hash }}"
+
+    - name: Generate Changelog (path test)
+      id: changelog_path
+      uses: jaywcjlove/changelog-generator@main
+      with:
+        path: ./.github/workflows/changelog.yml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        head-ref: ${{steps.create_tag.outputs.version}}
+        original-markdown: true
+        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+
+    - name: Generate Changelog (show-emoji test)
+      uses: jaywcjlove/changelog-generator@main
+      id: changelogEmoji
+      with:
+        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+        show-emoji: false
+        remove-type: true
+        
+    - name: Order Changelog (ASC)
+      uses: ./
+      with:
+        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+        show-emoji: false
+        remove-type: true
+        order: 'asc'
+
+    - name: Order Changelog (DESC)
+      uses: ./
+      with:
+        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+        show-emoji: false
+        remove-type: true
+        order: 'desc'
+
+    - name: Generate Changelog (outputs.changelog)
+      run: echo "${{ steps.changelogEmoji.outputs.changelog }}"
+
+    - name: Generate Changelog(main)
+      uses: jaywcjlove/changelog-generator@main
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        head-ref: ${{steps.create_tag.outputs.version}}
+        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
 
     - name: Create Release
       uses: ncipollo/release-action@v1
@@ -41,6 +81,6 @@ jobs:
         tag: ${{ steps.create_tag.outputs.version }}
         body: |
           ${{ steps.changelog.outputs.compareurl }}
-    
+            
           ${{ steps.changelog.outputs.changelog }}
           
