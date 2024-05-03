@@ -16,6 +16,8 @@ public class AppConfig extends JsonFile {
     public static String serverVersion = "";
     public static String serverBuild = "";
 
+    public static String[] commandHistory;
+
     public static int ram = 1024;
     public static int port = 25565;
     public static boolean auto_accept_eula = true;

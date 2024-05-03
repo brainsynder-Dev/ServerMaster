@@ -410,6 +410,7 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
                 START_SERVER = new Button("Start Server");
                 START_SERVER.setWidth("min-content");
+                START_SERVER.setHeight("50px");
                 bottomLayout.setAlignSelf(FlexComponent.Alignment.START, START_SERVER);
                 bottomLayout.add(COMMAND_FIELD, START_SERVER);
                 layout1.add(bottomLayout);
@@ -421,12 +422,58 @@ public class ServerConsoleView extends Composite<VerticalLayout> implements Befo
 
         AppUtilities.updateTheme();
 
+        {
+            VerticalLayout layout = new VerticalLayout();
+            layout.setSpacing(false);
+            layout.setPadding(false);
+            layout.getStyle().set("max-width", "min-content");
+
+            Icon up = VaadinIcon.ANGLE_UP.create();
+            up.setClassName("cmd-history-buttons");
+            up.addClickListener(iconClickEvent -> {
+                LinkedList<String> history = new LinkedList<>(Arrays.asList(AppConfig.commandHistory));
+                if (history.isEmpty()) return;
+
+                historyIndex--;
+                if (historyIndex <= 0) historyIndex = (history.size()-1);
+                COMMAND_FIELD.setValue(history.get(historyIndex));
+
+                COMMAND_FIELD.focus();
+            });
+
+            Icon down = VaadinIcon.ANGLE_DOWN.create();
+            down.setClassName("cmd-history-buttons");
+            down.addClickListener(iconClickEvent -> {
+                LinkedList<String> history = new LinkedList<>(Arrays.asList(AppConfig.commandHistory));
+                if (history.isEmpty()) return;
+
+                historyIndex++;
+                if (historyIndex >= history.size()) historyIndex = 0;
+                COMMAND_FIELD.setValue(history.get(historyIndex));
+
+                COMMAND_FIELD.focus();
+            });
+
+            layout.add(up, down);
+            COMMAND_FIELD.setSuffixComponent(layout);
+        }
+
         COMMAND_FIELD.addKeyPressListener(Key.ENTER, keyPressEvent -> {
             String text = COMMAND_FIELD.getValue();
             if (text == null || text.trim().isBlank()) return;
             COMMAND_FIELD.clear();
 
             text = text.trim();
+
+            {
+                LinkedList<String> history = new LinkedList<>(Arrays.asList(AppConfig.commandHistory));
+                if (history.isEmpty() || (!history.peekLast().equals(text))) history.addLast(text);
+                if (history.size() > 20) history.removeFirst();
+                AppConfig.commandHistory = history.toArray(String[]::new);
+                App.saveConfig();
+
+                historyIndex = (history.size()-1);
+            }
 
             // Display help information
             if ("??".equalsIgnoreCase(text)) {
