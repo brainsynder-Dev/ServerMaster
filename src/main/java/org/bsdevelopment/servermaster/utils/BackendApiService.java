@@ -7,11 +7,9 @@ package org.bsdevelopment.servermaster.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bsdevelopment.servermaster.instance.server.utils.Version;
 
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -19,13 +17,15 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class BackendApiService {
     private static final String BASE_URL = "https://dev.bsdevelopment.org/api/servermaster";
@@ -34,12 +34,13 @@ public final class BackendApiService {
     private final ObjectMapper objectMapper;
 
     public BackendApiService() {
-        this.httpClient = createUnsafeHttpClient();
+        this.httpClient = createHttpClient();
         this.objectMapper = new ObjectMapper();
     }
 
     public List<String> fetchProjects() throws IOException, InterruptedException {
-        JsonNode root = sendRequest(BASE_URL + "/projects");
+        String url = BASE_URL + "/projects";
+        JsonNode root = sendRequest(url);
 
         List<String> projects = new LinkedList<>();
         if (root.isArray()) {
@@ -52,7 +53,8 @@ public final class BackendApiService {
     public List<String> fetchVersions(String project) throws IOException, InterruptedException {
         Objects.requireNonNull(project, "Project cannot be null");
 
-        JsonNode root = sendRequest(BASE_URL + "/" + project);
+        String url = BASE_URL + "/" + project;
+        JsonNode root = sendRequest(url);
 
         List<String> versions = new LinkedList<>();
         JsonNode versionArray = root.get("versions");
@@ -64,13 +66,12 @@ public final class BackendApiService {
         return versions;
     }
 
-    public List<BuildInfo> fetchBuilds(String project, String version)
-            throws IOException, InterruptedException {
-
+    public List<BuildInfo> fetchBuilds(String project, String version) throws IOException, InterruptedException {
         Objects.requireNonNull(project, "Project cannot be null");
         Objects.requireNonNull(version, "Version cannot be null");
 
-        JsonNode root = sendRequest(BASE_URL + "/" + project + "/" + version);
+        String url = BASE_URL + "/" + project + "/" + version;
+        JsonNode root = sendRequest(url);
 
         List<BuildInfo> builds = new ArrayList<>();
         JsonNode buildArray = root.get("builds");
@@ -86,18 +87,49 @@ public final class BackendApiService {
         return builds;
     }
 
-    private JsonNode sendRequest(String url)
-            throws IOException, InterruptedException {
+    public List<String> fetchSpigotBuildToolsVersions() throws IOException, InterruptedException {
+        String url = "https://hub.spigotmc.org/versions/";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(Duration.ofSeconds(20))
-                .header("User-Agent", "ServerMaster")
                 .GET()
                 .build();
 
-        HttpResponse<String> response =
-                httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch Spigot versions: HTTP " + response.statusCode());
+        }
+
+        Pattern pattern = Pattern.compile("\\b\\d+\\.[\\.\\d]*\\.json\\b");
+        Matcher matcher = pattern.matcher(response.body());
+
+        Set<String> versions = new TreeSet<>((a, b) -> {
+            try {
+                return Version.parse(b).compareTo(Version.parse(a));
+            } catch (IllegalArgumentException ignored) {
+                return b.compareToIgnoreCase(a);
+            }
+        });
+
+        while (matcher.find()) {
+            String file = matcher.group();
+            if (!file.endsWith(".json")) continue;
+            String v = file.substring(0, file.length() - 5);
+            if (!v.isBlank()) versions.add(v);
+        }
+
+        return new ArrayList<>(versions);
+    }
+
+    private JsonNode sendRequest(String url) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(20))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch data from API: " + response.statusCode());
@@ -106,32 +138,15 @@ public final class BackendApiService {
         return objectMapper.readTree(response.body());
     }
 
-    private HttpClient createUnsafeHttpClient() {
-        try {
-            TrustManager[] trustAll = new TrustManager[]{
-                    new X509TrustManager() {
-                        public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
-                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                    }
-            };
+    private HttpClient createHttpClient() {
+        SSLParameters ssl = new SSLParameters();
+        ssl.setProtocols(new String[]{"TLSv1.3", "TLSv1.2"});
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAll, new SecureRandom());
-
-            SSLParameters sslParams = new SSLParameters();
-            sslParams.setEndpointIdentificationAlgorithm(null);
-
-            return HttpClient.newBuilder()
-                    .sslContext(sslContext)
-                    .sslParameters(sslParams)
-                    .connectTimeout(Duration.ofSeconds(15))
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .build();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create unsafe SSL HttpClient", e);
-        }
+        return HttpClient.newBuilder()
+                .sslParameters(ssl)
+                .connectTimeout(Duration.ofSeconds(15))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
     }
 
     public HttpURLConnection openDownloadConnection(List<BuildInfo> builds, String build) throws IOException {
@@ -153,7 +168,7 @@ public final class BackendApiService {
 
     public List<String> extractBuildNumbers(List<BuildInfo> builds) {
         if (builds == null || builds.isEmpty()) return List.of();
-        return builds.stream().map(b -> String.valueOf(b.build())).toList();
+        return builds.stream().map(buildInfo -> String.valueOf(buildInfo.build)).toList();
     }
 
     public record BuildInfo(int build, String downloadUrl) {

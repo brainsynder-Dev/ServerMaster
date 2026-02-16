@@ -16,7 +16,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.bsdevelopment.servermaster.LogViewer;
 import org.bsdevelopment.servermaster.ServerMasterApp;
+import org.bsdevelopment.servermaster.config.AppSettings;
 import org.bsdevelopment.servermaster.config.SettingsService;
 import org.bsdevelopment.servermaster.instance.InstanceCatalog;
 import org.bsdevelopment.servermaster.ui.window.WindowButtons;
@@ -25,17 +27,35 @@ import org.bsdevelopment.servermaster.utils.BackendApiService;
 import org.bsdevelopment.servermaster.utils.FX;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public final class ServerInstallerDialog {
+
+    private static final String SPIGOT_TYPE = "spigot";
+    private static final String BUILDTOOLS_JAR_URL =
+            "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar";
+
     private final Stage stage;
     private final BackendApiService API = new BackendApiService();
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
     private Button installBtn;
     private List<BackendApiService.BuildInfo> currentBuilds = new ArrayList<>();
 
@@ -55,6 +75,7 @@ public final class ServerInstallerDialog {
         var type = blankCombo("Server Type");
         type.setDisable(false);
         type.getItems().addAll(API.fetchProjects());
+        if (!type.getItems().contains(SPIGOT_TYPE)) type.getItems().add(SPIGOT_TYPE);
 
         var version = blankCombo("Server Version");
         var build = blankCombo("Server Build");
@@ -63,10 +84,18 @@ public final class ServerInstallerDialog {
             var project = type.getValue();
             version.getItems().clear();
             build.setDisable(true);
+            installBtn.setDisable(true);
 
             try {
-                version.getItems().addAll(API.fetchVersions(project));
-                version.setDisable(false);
+                if (SPIGOT_TYPE.equalsIgnoreCase(project)) {
+                    version.getItems().addAll(API.fetchSpigotBuildToolsVersions());
+                    version.setDisable(false);
+                    build.getItems().clear();
+                    build.setDisable(true);
+                } else {
+                    version.getItems().addAll(API.fetchVersions(project));
+                    version.setDisable(false);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -77,6 +106,17 @@ public final class ServerInstallerDialog {
             var versionVal = version.getValue();
             build.getItems().clear();
 
+            if (project == null || versionVal == null) {
+                installBtn.setDisable(true);
+                return;
+            }
+
+            if (SPIGOT_TYPE.equalsIgnoreCase(project)) {
+                build.setDisable(true);
+                installBtn.setDisable(false);
+                return;
+            }
+
             try {
                 build.getItems().addAll(API.extractBuildNumbers(currentBuilds = API.fetchBuilds(project, versionVal)));
                 build.setDisable(false);
@@ -85,7 +125,11 @@ public final class ServerInstallerDialog {
             }
         });
 
-        build.setOnAction(actionEvent -> installBtn.setDisable(false));
+        build.setOnAction(actionEvent -> {
+            if (!SPIGOT_TYPE.equalsIgnoreCase(type.getValue())) {
+                installBtn.setDisable(false);
+            }
+        });
 
         var form = new VBox(10, type, version, build);
         form.setAlignment(Pos.TOP_CENTER);
@@ -102,10 +146,20 @@ public final class ServerInstallerDialog {
 
         installBtn.setOnAction(e -> {
             try {
-                handleDownload(progressBar,
+                if (SPIGOT_TYPE.equalsIgnoreCase(type.getValue())) {
+                    stage.close();
+                    runBuildTools(version.getValue());
+                    return;
+                }
+
+                handleDownload(
+                        progressBar,
                         SettingsService.get().getServerPath().resolve("instance").resolve(type.getValue()),
-                        type.getValue(), version.getValue(), build.getValue(),
-                        API.openDownloadConnection(currentBuilds, build.getValue()));
+                        type.getValue(),
+                        version.getValue(),
+                        build.getValue(),
+                        API.openDownloadConnection(currentBuilds, build.getValue())
+                );
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -124,6 +178,136 @@ public final class ServerInstallerDialog {
         scene.setFill(Color.TRANSPARENT);
         FX.addStyleSheet(scene);
         stage.setScene(scene);
+    }
+
+    private void runBuildTools(String minecraftVersion) {
+        if (minecraftVersion == null || minecraftVersion.isBlank()) {
+            LogViewer.system("Missing Minecraft version for BuildTools.");
+            return;
+        }
+
+        AppSettings config = SettingsService.get();
+        Path serverRoot = SettingsService.get().getServerPath();
+        Path buildToolsDir = serverRoot.resolve("buildtools");
+        Path buildToolsJar = buildToolsDir.resolve("BuildTools.jar");
+
+        var task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                ServerMasterApp.lockApplication();
+
+                Files.createDirectories(buildToolsDir);
+
+                downloadBuildTools(buildToolsJar);
+                cleanupStaleJGitLocks(buildToolsDir);
+
+                LogViewer.system("Executing BuildTools (this can take a while)...");
+
+                var pb = new ProcessBuilder(
+                        "java",
+                        "-Xms" + config.getMemory() + "G",
+                        "-Xmx" + config.getMemory() + "G",
+                        "-jar",
+                        buildToolsJar.toAbsolutePath().toString(),
+                        "--rev",
+                        minecraftVersion,
+                        "--remapped"
+                );
+
+                pb.directory(buildToolsDir.toFile());
+                pb.redirectErrorStream(true);
+
+                Process process = pb.start();
+                ServerMasterApp.registerBuildToolsProcess(process);
+
+                try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (!line.isBlank()) LogViewer.console(line);
+                    }
+                } finally {
+                    // Ensure we always clear the tracked process reference
+                    ServerMasterApp.clearBuildToolsProcess(process);
+                }
+
+                int exit = process.waitFor();
+                if (exit != 0) throw new IllegalStateException("BuildTools failed (exit code " + exit + ")");
+
+                Path spigotJar = findNewestSpigotJar(buildToolsDir)
+                        .orElseThrow(() -> new IllegalStateException("BuildTools finished but no spigot-*.jar was found"));
+
+                Path outDir = serverRoot.resolve("instance").resolve(SPIGOT_TYPE);
+                Files.createDirectories(outDir);
+
+                Path outJar = outDir.resolve("spigot-" + minecraftVersion + ".jar");
+                Files.copy(spigotJar, outJar,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES);
+
+                LogViewer.system("Spigot jar built: " + outJar.getFileName());
+                return null;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            ServerMasterApp.unlockApplication();
+            ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
+        });
+
+        task.setOnFailed(e -> {
+            ServerMasterApp.unlockApplication();
+            Throwable ex = task.getException();
+            LogViewer.system("BuildTools failed: " + (ex == null ? "Unknown error" : ex.getMessage()));
+        });
+
+        task.setOnCancelled(e -> ServerMasterApp.unlockApplication());
+
+        var thread = new Thread(task, "servermaster-buildtools");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void downloadBuildTools(Path targetJar) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BUILDTOOLS_JAR_URL))
+                .header("User-Agent", "ServerMaster")
+                .GET()
+                .build();
+
+        HttpResponse<Path> resp = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(targetJar));
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new IOException("Failed to download BuildTools.jar: HTTP " + resp.statusCode());
+        }
+    }
+
+    private Optional<Path> findNewestSpigotJar(Path buildToolsDir) throws IOException {
+        try (Stream<Path> s = Files.walk(buildToolsDir)) {
+            return s.filter(Files::isRegularFile)
+                    .filter(p -> {
+                        String n = p.getFileName().toString().toLowerCase(Locale.ROOT);
+                        return n.startsWith("spigot-") && n.endsWith(".jar");
+                    })
+                    .max(Comparator.comparingLong(a -> a.toFile().lastModified()));
+        }
+    }private static void cleanupStaleJGitLocks(Path buildToolsDir) {
+        // Typical BuildTools repositories that may leave an index.lock behind when killed.
+        Path[] lockFiles = new Path[] {
+                buildToolsDir.resolve("CraftBukkit/.git/index.lock"),
+                buildToolsDir.resolve("Spigot/.git/index.lock"),
+                buildToolsDir.resolve("Bukkit/.git/index.lock"),
+                buildToolsDir.resolve("BuildData/.git/index.lock")
+        };
+
+        for (Path lock : lockFiles) {
+            try {
+                if (Files.exists(lock)) {
+                    Files.delete(lock);
+                    LogViewer.system("Removed stale git lock: " + lock.getFileName());
+                }
+            } catch (IOException ignored) {
+                // If Windows/AV still holds it, BuildTools will throw the same message again.
+            }
+        }
     }
 
     private static ComboBox<String> blankCombo(String prompt) {
@@ -163,10 +347,11 @@ public final class ServerInstallerDialog {
                     throw new java.io.IOException("HTTP " + code + " " + connection.getResponseMessage());
                 }
 
-                long contentLength = connection.getContentLengthLong(); // -1 if unknown
+                long contentLength = connection.getContentLengthLong();
 
                 try (var in = new BufferedInputStream(connection.getInputStream());
                      var out = Files.newOutputStream(file, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+
                     byte[] buf = new byte[64 * 1024];
                     long readTotal = 0;
                     int read;

@@ -41,6 +41,7 @@ public final class WindowButtons extends HBox {
         close.setOnMouseClicked(e -> {
             try {
                 if (ServerMasterApp.serverWrapper().isServerRunning()) ServerHandlerAPI.killServer();
+                ServerMasterApp.stopBuildToolsIfRunning();
                 onClose.run();
             }catch (Exception ignored) {}
 

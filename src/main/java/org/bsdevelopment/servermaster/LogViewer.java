@@ -63,6 +63,14 @@ public class LogViewer extends AnchorPane {
         Platform.runLater(() -> viewer.appendSystemMessage(message));
     }
 
+    /** Raw console line piping (BuildTools/server output). */
+    public static void console(String line) {
+        LogViewer viewer = ACTIVE_INSTANCE;
+        if (viewer == null) return;
+
+        Platform.runLater(() -> viewer.appendLine(line));
+    }
+
     public void loadFile(Path path) throws IOException {
         List<String> lines = Files.readAllLines(path);
         codeArea.clear();

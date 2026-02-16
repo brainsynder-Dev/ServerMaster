@@ -57,10 +57,16 @@ public final class ServerSelectionPane extends VBox {
         start.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
         start.setMaxWidth(Double.MAX_VALUE);
 
-        type.disableProperty().bind(serverRunning);
-        version.disableProperty().bind(Bindings.or(serverRunning, versionEnabled.not()));
-        build.disableProperty().bind(Bindings.or(serverRunning, buildEnabled.not()));
-        start.disableProperty().bind(Bindings.or(serverRunning, startEnabled.not()));
+        var locked = ServerMasterApp.applicationLockedProperty();
+        type.disableProperty().bind(serverRunning.or(locked));
+        version.disableProperty().bind(Bindings.or(serverRunning.or(locked), versionEnabled.not()));
+        build.disableProperty().bind(Bindings.or(serverRunning.or(locked), buildEnabled.not()));
+        start.disableProperty().bind(Bindings.or(serverRunning.or(locked), startEnabled.not()));
+
+        // Refresh lists when the user OPENS the dropdown
+        type.setOnShowing(e -> refreshTypes());
+        version.setOnShowing(e -> refreshVersions());
+        build.setOnShowing(e -> refreshBuilds());
 
         type.setOnAction(actionEvent -> {
             version.getItems().clear();
@@ -77,7 +83,7 @@ public final class ServerSelectionPane extends VBox {
 
             versionEnabled.set(true);
             try {
-                version.getItems().addAll(ServerMasterApp.instanceCatalog.listVersions(selectedType));
+                version.getItems().setAll(ServerMasterApp.instanceCatalog.listVersions(selectedType));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -102,7 +108,7 @@ public final class ServerSelectionPane extends VBox {
                 } else {
                     build.setVisible(true);
                     buildEnabled.set(true);
-                    build.getItems().addAll(builds.stream().map(Object::toString).toList());
+                    build.getItems().setAll(builds.stream().map(Object::toString).toList());
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -162,6 +168,76 @@ public final class ServerSelectionPane extends VBox {
         );
     }
 
+    private void refreshTypes() {
+        if (type.isDisabled()) return;
+
+        String keep = type.getValue();
+        try {
+            List<String> types = ServerMasterApp.instanceCatalog.listServerTypes();
+            type.getItems().setAll(types);
+
+            if (keep != null && !keep.isBlank() && types.contains(keep)) {
+                type.setValue(keep);
+            }
+        } catch (IOException ignored) {
+            // don't blow up UI on show
+        }
+    }
+
+    private void refreshVersions() {
+        if (version.isDisabled()) return;
+
+        String selectedType = type.getValue();
+        if (selectedType == null || selectedType.isBlank()) return;
+
+        String keep = version.getValue();
+        try {
+            List<String> versions = ServerMasterApp.instanceCatalog.listVersions(selectedType);
+            version.getItems().setAll(versions);
+
+            if (keep != null && !keep.isBlank() && versions.contains(keep)) {
+                version.setValue(keep);
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void refreshBuilds() {
+        if (build.isDisabled()) return;
+
+        String selectedType = type.getValue();
+        String selectedVersion = version.getValue();
+        if (selectedType == null || selectedType.isBlank()) return;
+        if (selectedVersion == null || selectedVersion.isBlank()) return;
+
+        String keep = build.getValue();
+        try {
+            List<Integer> builds = ServerMasterApp.instanceCatalog.listBuilds(selectedType, selectedVersion);
+
+            if (builds.isEmpty()) {
+                build.getItems().clear();
+                build.setVisible(false);
+                buildEnabled.set(false);
+                startEnabled.set(true);
+                return;
+            }
+
+            build.setVisible(true);
+            buildEnabled.set(true);
+
+            List<String> buildStrings = builds.stream().map(Object::toString).toList();
+            build.getItems().setAll(buildStrings);
+
+            if (keep != null && !keep.isBlank() && buildStrings.contains(keep)) {
+                build.setValue(keep);
+                startEnabled.set(true);
+            } else {
+                startEnabled.set(false);
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
     private void restoreSelectionFromModel() throws IOException {
         if (!selection.getServerType().isBlank()) {
             type.setValue(selection.getServerType());
@@ -169,7 +245,7 @@ public final class ServerSelectionPane extends VBox {
 
         if (!selection.getServerVersion().isBlank()) {
             versionEnabled.set(true);
-            version.getItems().addAll(ServerMasterApp.instanceCatalog.listVersions(type.getValue()));
+            version.getItems().setAll(ServerMasterApp.instanceCatalog.listVersions(type.getValue()));
             version.setValue(selection.getServerVersion());
         }
 
@@ -178,7 +254,7 @@ public final class ServerSelectionPane extends VBox {
             if (!builds.isEmpty()) {
                 build.setVisible(true);
                 buildEnabled.set(true);
-                build.getItems().addAll(builds.stream().map(Object::toString).toList());
+                build.getItems().setAll(builds.stream().map(Object::toString).toList());
                 build.setValue(selection.getServerBuild());
                 startEnabled.set(true);
             }

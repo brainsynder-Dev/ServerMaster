@@ -100,10 +100,11 @@ public final class MainWindow {
                 }
         );
 
+        var locked = ServerMasterApp.applicationLockedProperty();
         var installer = new Button("Server Installer");
         installer.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
         installer.setMaxWidth(Double.MAX_VALUE);
-        installer.disableProperty().bind(serverRunning);
+        installer.disableProperty().bind(serverRunning.or(locked));
         installer.setOnAction(e -> {
             try {
                 new ServerInstallerDialog(stage).show();
@@ -115,7 +116,7 @@ public final class MainWindow {
         var settings = new Button("Settings");
         settings.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
         settings.setMaxWidth(Double.MAX_VALUE);
-        settings.disableProperty().bind(serverRunning);
+        settings.disableProperty().bind(serverRunning.or(locked));
         settings.setOnAction(e -> new SettingsDialog(stage).show());
 
         var spacer = new Region();
