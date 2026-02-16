@@ -1,0 +1,39 @@
+.window-surface {
+    -fx-background-color: -color-bg-default;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1px;
+}
+
+/* Variants */
+.window-outline-accent {
+    -fx-border-color: -color-accent-emphasis;
+    -fx-border-width: 2px;
+}
+
+.window-outline-danger {
+    -fx-border-color: -color-danger-emphasis;
+    -fx-border-width: 2px;
+}
+
+.window-outline-success {
+    -fx-border-color: -color-success-emphasis;
+    -fx-border-width: 2px;
+}
+
+.window-outline-none {
+    -fx-border-width: 0px;
+}
+
+.window-surface.dialog {
+    -fx-background-color: -color-bg-subtle;
+}
+
+/* Optional: even lighter variant if you want */
+.window-surface.dialog-light {
+    -fx-background-color: derive(-color-bg-subtle, 6%);
+}
+
+/* Catastrophic error window */
+.window-surface.fatal {
+    -fx-background-color: #5b2b2b; /* maroon-ish like your mock */
+}

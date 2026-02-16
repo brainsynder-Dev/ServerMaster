@@ -1,0 +1,28 @@
+[versions]
+# Dependencies
+minimaljson = "0.11.0"
+scenicview = "17.0.2"
+cssfx = "11+"
+ikonli = "12.3.1"
+atlantafx="2.1.0"
+
+
+# Plugins
+javafxplugin = "0.0.13"
+shadow = "9.0.0-beta8"
+
+[libraries]
+minimaljson = { module = "com.github.tonivade:minimal-json", version.ref = "minimaljson" }
+
+cssfx = { module = "fr.brouillard.oss:cssfx", version.ref = "cssfx" }
+ikonli-core = { module = "org.kordamp.ikonli:ikonli-core", version.ref = "ikonli" }
+ikonli-javafx = { module = "org.kordamp.ikonli:ikonli-javafx", version.ref = "ikonli" }
+ikonli-fontawesome5-pack = { module = "org.kordamp.ikonli:ikonli-fontawesome5-pack", version.ref = "ikonli" }
+atlantafx = { module = "io.github.mkpaz:atlantafx-base", version.ref = "atlantafx" }
+
+#virtualizedfx = { module = "io.github.palexdev:virtualizedfx", version.ref = "virtualizedfx" }
+#materialfx = { module = "io.github.palexdev:materialfx", version.ref = "materialfx" }
+
+[plugins]
+javafxplugin = { id = "org.openjfx.javafxplugin", version.ref = "javafxplugin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

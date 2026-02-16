@@ -1,0 +1,48 @@
+/* The container itself */
+.log-viewer {
+    /*-fx-background-color: -color-bg-default;  NordDark token */
+}
+
+/* The CodeArea node */
+.log-viewer .log-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: #2E3440;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+/* RichTextFX internals that are usually the "white" you see */
+.log-viewer .log-cell .virtual-flow,
+.log-viewer .log-cell .content {
+    -fx-background-color: -color-bg-default; /* or transparent if you want container to show through */
+}
+
+/* Often helpful to keep paragraph backgrounds from painting */
+.log-viewer .log-cell .paragraph-box,
+.log-viewer .log-cell .paragraph-text {
+    -fx-background-color: transparent;
+}
+
+/* Your existing text styles are fine */
+.log-fatal { -fx-fill: #ff6b6b; -fx-font-weight: bold; }
+.log-error { -fx-fill: #ff4d4f; }
+.log-warn  { -fx-fill: #ffa940; }
+.log-debug { -fx-fill: #7f8c8d; }
+.log-trace { -fx-fill: #95a5a6; }
+.log-info  { -fx-fill: #d8dee9; }
+.log-default  { -fx-fill: #d8dee9; }
+
+.log-timestamp { -fx-fill: #979fae; }
+.log-thread    { -fx-fill: #979fae; }
+
+.log-paused {
+    -fx-fill: #D00FF7;
+}
+.log-success {
+    -fx-fill: #0FF72E;
+}
+.log-system {
+    -fx-fill: #4FC3F7;
+    -fx-font-weight: bold;
+}
+

@@ -1,0 +1,33 @@
+/* Make CodeArea transparent so the WindowSurface.fatal color shows through */
+.log-viewer,
+.log-viewer .content {
+    -fx-background-color: transparent;
+}
+
+/* Force all text white (even if spans/classes exist) */
+.log-viewer .text {
+    -fx-fill: white;
+}
+
+/* Keep selection visible */
+.log-viewer .selection {
+    -fx-fill: rgba(255, 255, 255, 0.25);
+}
+
+/* Caret */
+.log-viewer .caret {
+    -fx-stroke: white;
+}
+
+/* Scrollbars */
+.log-viewer .scroll-bar {
+    -fx-background-color: transparent;
+}
+.log-viewer .scroll-bar .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Timestamp also white */
+.log-timestamp {
+    -fx-fill: white;
+}
