@@ -61,14 +61,14 @@ public final class GameRuleFileApplier implements ServerOutputListener {
     private int currentNameIndex;
     private ScheduledFuture<?> timeoutFuture;
 
-    public static ServerOutputListener wrap(ServerOutputListener delegate, Path jsonFile) {
-        Objects.requireNonNull(delegate, "delegate");
-        Objects.requireNonNull(jsonFile, "jsonFile");
+    public static ServerOutputListener wrap(ServerOutputListener outputListener, Path jsonFile) {
+        Objects.requireNonNull(outputListener, "Missing server output listener");
+        Objects.requireNonNull(jsonFile, "Missing gamerule JSON file");
 
         var loaded = loadRuleFile(jsonFile);
-        if (loaded.rules.isEmpty()) return delegate;
+        if (loaded.rules.isEmpty()) return outputListener;
 
-        return new GameRuleFileApplier(delegate, loaded);
+        return new GameRuleFileApplier(outputListener, loaded);
     }
 
     private record LoadedRules(LinkedHashMap<String, String> rules, Map<String, List<String>> aliasesByRuleName) {
@@ -76,7 +76,7 @@ public final class GameRuleFileApplier implements ServerOutputListener {
 
     private static LoadedRules loadRuleFile(Path file) {
         if (!Files.exists(file)) {
-            LogViewer.system("Gamerule file missing: " + file);
+            LogViewer.system("Gamerule file missing: " + file.toAbsolutePath());
             return new LoadedRules(new LinkedHashMap<>(), Map.of());
         }
 
