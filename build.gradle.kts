@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bsdevelopment.servermaster"
-version = "1.5.3"
+version = "1.6"
 
 repositories {
     mavenCentral()
@@ -70,6 +70,7 @@ tasks.withType<JavaCompile> {
 tasks.named<ShadowJar>("shadowJar") {
     archiveBaseName.set("ServerMaster")
     archiveClassifier.set("")
+    archiveVersion.set("")
 
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
