@@ -31,8 +31,6 @@
 
 ## 🚀 About The Project
 
-![Server Master][product-screenshot]
-
 ServerMaster originally started as a simple batch file for switching between server types (Spigot, Paper, etc.) and versions. It has since evolved into a full-featured JavaFX desktop application built for developers and server administrators.
 
 ---
@@ -102,6 +100,16 @@ ServerMaster originally started as a simple batch file for switching between ser
 - Closing app
 
 ---
+## Screenshots
+
+<div align="center">
+    <img src="./src/main/resources/images/screenshots/main-window.png" alt="Logo" width="650" height="350">
+    <img src="./src/main/resources/images/screenshots/settings-window.png" alt="Logo" width="400" height="250">
+    <img src="./src/main/resources/images/screenshots/installer-empty-window.png" alt="Logo" width="400" height="250">
+    <img src="./src/main/resources/images/screenshots/installer-type-window.png" alt="Logo" width="400" height="250">
+</div>
+
+---
 
 ## 🗺 Roadmap
 - [x] Spigot BuildTools installer
@@ -135,4 +143,4 @@ https://github.com/brainsynder-Dev/ServerMaster
 [issues-url]: https://github.com/brainsynder-Dev/ServerMaster/issues
 [license-shield]: https://img.shields.io/github/license/brainsynder-Dev/ServerMaster.svg?style=for-the-badge
 [license-url]: https://github.com/brainsynder-Dev/ServerMaster/blob/master/LICENSE
-[product-screenshot]: ./src/main/resources/images/app-images/base-app-image-dark.png
+[product-screenshot]: ./src/main/resources/images/screenshots/main-window.png
