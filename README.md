@@ -115,7 +115,7 @@ ServerMaster originally started as a simple batch file for switching between ser
 - [x] Spigot BuildTools installer
 - [x] Default gamerules
 - [ ] server.properties editor
-- [ ] ViaVersion/ViaBackwards Automatic Updates
+- [x] ViaVersion/ViaBackwards Automatic Updates
 - [ ] Plugin manager
 
 ---

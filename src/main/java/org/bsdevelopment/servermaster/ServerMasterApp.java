@@ -12,6 +12,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import org.bsdevelopment.servermaster.backend.ViaJenkinsPluginUpdater;
 import org.bsdevelopment.servermaster.components.ServerSelection;
 import org.bsdevelopment.servermaster.config.SettingsService;
 import org.bsdevelopment.servermaster.instance.InstanceCatalog;
@@ -79,6 +80,8 @@ public class ServerMasterApp extends Application {
 
         var selection = new ServerSelection("", "", "");
         new MainWindow(selection).show();
+
+        new Thread(() -> new ViaJenkinsPluginUpdater().runOnStartup()).start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stopBuildToolsIfRunning();
