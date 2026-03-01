@@ -173,6 +173,13 @@ public final class MainWindow {
 
             cmd = cmd.trim();
             if (cmd.isBlank()) return;
+            rememberCommand(cmd);
+
+            if (cmd.equalsIgnoreCase("cls") || cmd.equalsIgnoreCase("clear")) {
+                console.clearConsole();
+                commandField.clear();
+                return;
+            }
 
             if (!ServerMasterApp.serverWrapper().isServerRunning()) {
                 console.appendStyledLine("Unable to send command when a server is not running.", "log-fatal");
@@ -180,8 +187,6 @@ public final class MainWindow {
             }
 
             console.appendSystemMessage("Executing command: " + cmd);
-
-            rememberCommand(cmd);
 
             historyIndex = -1;
             historyDraft = "";
