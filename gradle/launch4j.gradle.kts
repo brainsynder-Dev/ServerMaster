@@ -123,9 +123,12 @@ if (launch4jDir != null) {
         dependsOn("shadowJar", generateConfig, downloadJre)
 
         val isWindows = System.getProperty("os.name").lowercase().contains("win")
-        val binary = if (isWindows) "$launch4jDir/launch4jc.exe" else "$launch4jDir/launch4j"
 
-        commandLine(binary, configXml.get().asFile.absolutePath)
+        if (isWindows) {
+            commandLine("$launch4jDir/launch4jc.exe", configXml.get().asFile.absolutePath)
+        } else {
+            commandLine("java", "-jar", "$launch4jDir/launch4j.jar", configXml.get().asFile.absolutePath)
+        }
 
         inputs.file(jarFile)
         inputs.file(configXml)
@@ -205,9 +208,12 @@ if (launch4jDir != null) {
         dependsOn("shadowJar", generatePlainConfig)
 
         val isWindows = System.getProperty("os.name").lowercase().contains("win")
-        val binary = if (isWindows) "$launch4jDir/launch4jc.exe" else "$launch4jDir/launch4j"
 
-        commandLine(binary, plainConfigXml.get().asFile.absolutePath)
+        if (isWindows) {
+            commandLine("$launch4jDir/launch4jc.exe", plainConfigXml.get().asFile.absolutePath)
+        } else {
+            commandLine("java", "-jar", "$launch4jDir/launch4j.jar", plainConfigXml.get().asFile.absolutePath)
+        }
 
         inputs.file(jarFile)
         inputs.file(plainConfigXml)
