@@ -46,13 +46,13 @@ jobs:
       # ── Artifacts ────────────────────────────────────────────────────────────
 
       - name: Build JAR
-        run: ./gradlew shadowJar
+        run: ./gradle shadowJar
 
       - name: Build plain EXE (requires system Java)
-        run: ./gradlew packageExePlain -Plaunch4jDir=$LAUNCH4J_DIR
+        run: ./gradle packageExePlain -Plaunch4jDir=$LAUNCH4J_DIR
 
       - name: Build bundled ZIP (EXE + JRE)
-        run: ./gradlew packageWindowsDist -Plaunch4jDir=$LAUNCH4J_DIR
+        run: ./gradle packageWindowsDist -Plaunch4jDir=$LAUNCH4J_DIR
 
       # ── Release ───────────────────────────────────────────────────────────────
 
