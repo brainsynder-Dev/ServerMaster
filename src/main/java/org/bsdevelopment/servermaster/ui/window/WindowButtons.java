@@ -2,12 +2,14 @@ package org.bsdevelopment.servermaster.ui.window;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.bsdevelopment.servermaster.ServerMasterApp;
 import org.bsdevelopment.servermaster.instance.server.ServerHandlerAPI;
@@ -16,6 +18,8 @@ import org.bsdevelopment.servermaster.utils.FX;
 public final class WindowButtons extends HBox {
     private double dragOffsetX;
     private double dragOffsetY;
+    private boolean isMaximized = false;
+    private double preMaxX, preMaxY, preMaxW, preMaxH;
 
     public WindowButtons(Stage stage, boolean showMinimize){
         this(stage, showMinimize, () -> {});
@@ -34,7 +38,29 @@ public final class WindowButtons extends HBox {
         FX.createTooltip(minimize, "Minimize Window");
 
         var maximize = circle(Color.web("#77D84B"));
-        maximize.setOnMouseClicked(e -> stage.setMaximized(!stage.isMaximized()));
+        maximize.setOnMouseClicked(e -> {
+            if (isMaximized) {
+                stage.setX(preMaxX);
+                stage.setY(preMaxY);
+                stage.setWidth(preMaxW);
+                stage.setHeight(preMaxH);
+                isMaximized = false;
+            } else {
+                preMaxX = stage.getX();
+                preMaxY = stage.getY();
+                preMaxW = stage.getWidth();
+                preMaxH = stage.getHeight();
+
+                var screens = Screen.getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
+                Rectangle2D bounds = (screens.isEmpty() ? Screen.getPrimary() : screens.get(0)).getVisualBounds();
+
+                stage.setX(bounds.getMinX());
+                stage.setY(bounds.getMinY());
+                stage.setWidth(bounds.getWidth());
+                stage.setHeight(bounds.getHeight());
+                isMaximized = true;
+            }
+        });
         FX.createTooltip(maximize, "Maximize Window");
 
         var close = circle(Color.web("#ff5f57"));
