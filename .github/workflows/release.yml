@@ -38,6 +38,7 @@ jobs:
           curl -fsSL "https://sourceforge.net/projects/launch4j/files/launch4j-3/3.50/launch4j-3.50-linux-x64.tgz/download" -o launch4j.tgz
           tar -xzf launch4j.tgz -C "$HOME"
           chmod +x "$HOME/launch4j/launch4j"
+          chmod +x "$HOME/launch4j/bin/"*
           echo "LAUNCH4J_DIR=$HOME/launch4j" >> $GITHUB_ENV
 
       # ── Artifacts ────────────────────────────────────────────────────────────
