@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.shadow)
     id("org.openjfx.javafxplugin") version "0.0.14"
     id("io.freefair.lombok") version "9.0.0"
-//    id("org.beryx.runtime") version "2.0.1"
 }
 
 group = "org.bsdevelopment.servermaster"
@@ -80,15 +79,6 @@ tasks.named<ShadowJar>("shadowJar") {
     mergeServiceFiles()
 }
 
-//tasks.named<Jar>("jar") {
-//    manifest {
-//        attributes["Main-Class"] = application.mainClass.get()
-//        attributes["Implementation-Version"] = project.version.toString()
-//    }
-//    // If you ONLY want the shadow jar output, uncomment:
-//    // enabled = false
-//}
-
 tasks.named("build") {
     dependsOn("shadowJar")
 }
@@ -100,52 +90,4 @@ tasks.named("startShadowScripts") { enabled = false }
 tasks.named("shadowDistTar") { enabled = false }
 tasks.named("shadowDistZip") { enabled = false }
 
-//runtime {
-//    options = listOf(
-//        "--strip-debug",
-//        "--compress", "2",
-//        "--no-header-files",
-//        "--no-man-pages")
-//
-//    jpackage {
-//        val os = org.gradle.internal.os.OperatingSystem.current()
-//
-//        val iconPath = when {
-//            os.isWindows -> "src/main/resources/images/servermaster.ico"
-//            os.isMacOsX -> "src/main/resources/images/servermaster.icns"
-//            else -> "src/main/resources/images/servermaster.png"
-//        }
-//
-//        if (os.isWindows) {
-//            installerType = "msi"
-//        }
-//
-//        imageOptions = listOf("--icon", iconPath)
-//
-//        installerOptions = buildList {
-//            addAll(listOf(
-//                "--vendor", "BSDevelopment",
-//                "--description", "A server console to run different server versions and types all off of 1 server folder"
-//            ))
-//
-//            if (os.isWindows) {
-//                addAll(listOf(
-//                    "--win-per-user-install",
-//                    "--win-dir-chooser",
-//                    "--win-menu",
-//                    "--win-shortcut"
-//                ))
-//            } else if (os.isLinux) {
-//                addAll(listOf(
-//                    "--linux-package-name", "servermaster", "--linux-shortcut"
-//                ))
-//            } else if (os.isMacOsX) {
-//                addAll(listOf(
-//                    "--mac-package-name", "servermaster"
-//                ))
-//            }
-//        }
-//    }
-//}
-
-//apply(from = "gradle/r2-publish.gradle.kts")
+apply(from = "gradle/launch4j.gradle.kts")

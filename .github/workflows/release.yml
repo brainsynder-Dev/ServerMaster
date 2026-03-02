@@ -5,55 +5,100 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
+  release:
     permissions: write-all
     runs-on: ubuntu-latest
+
     steps:
-    - run: echo "previous_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history required for tag detection and changelog
 
-    - name: Generate Changelog
-      id: changelog
-      uses: jaywcjlove/changelog-generator@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        head-ref: ${{steps.changelog.outputs.version}}
-        original-markdown: true
-        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-    - run: echo "outputs.changelog - ${{ steps.changelog.outputs.changelog }}"
-    - run: echo "outputs.tag - ${{ steps.changelog.outputs.tag }}"
-    - run: echo "outputs.branch - ${{ steps.changelog.outputs.branch }}"
-    - run: echo "outputs.compareurl - ${{ steps.changelog.outputs.compareurl }}"
-    - run: echo "outputs.version - ${{ steps.changelog.outputs.version }}"
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
 
-    - name: Generate Changelog (path test)
-      id: changelog_path
-      uses: jaywcjlove/changelog-generator@main
-      with:
-        path: ./.github/workflows/changelog.yml
-        token: ${{ secrets.GITHUB_TOKEN }}
-        head-ref: ${{steps.changelog.outputs.version}}
-        original-markdown: true
-        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+      - name: Cache bundled JRE
+        uses: actions/cache@v4
+        with:
+          path: build/libs/jre
+          key: jre-temurin-21-windows-x64
 
-    - name: Generate Changelog (outputs.changelog)
-      run: echo "${{ steps.changelogEmoji.outputs.changelog }}"
+      - name: Install Launch4J
+        run: |
+          curl -fsSL "https://sourceforge.net/projects/launch4j/files/launch4j-3/3.50/launch4j-3.50-linux-x64.tgz/download" -o launch4j.tgz
+          tar -xzf launch4j.tgz -C "$HOME"
+          chmod +x "$HOME/launch4j/launch4j"
+          echo "LAUNCH4J_DIR=$HOME/launch4j" >> $GITHUB_ENV
 
-    - name: Generate Changelog(main)
-      uses: jaywcjlove/changelog-generator@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        custom-emoji: 'chore💻'
-        filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+      # ── Artifacts ────────────────────────────────────────────────────────────
 
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: ${{ steps.changelog.outputs.version }}
-        tag: ${{ steps.changelog.outputs.version }}
-        body: |
-          ${{ steps.changelog.outputs.compareurl }}
-            
-          ${{ steps.changelog.outputs.changelog }}
-          
+      - name: Build JAR
+        run: ./gradlew shadowJar
+
+      - name: Build plain EXE (requires system Java)
+        run: ./gradlew packageExePlain -Plaunch4jDir=$LAUNCH4J_DIR
+
+      - name: Build bundled ZIP (EXE + JRE)
+        run: ./gradlew packageWindowsDist -Plaunch4jDir=$LAUNCH4J_DIR
+
+      # ── Release ───────────────────────────────────────────────────────────────
+
+      - run: echo "previous_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> $GITHUB_ENV
+
+      - name: Generate Changelog
+        id: changelog
+        uses: jaywcjlove/changelog-generator@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          head-ref: ${{ steps.changelog.outputs.version }}
+          original-markdown: true
+          filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+
+      - name: Generate Changelog (path test)
+        id: changelog_path
+        uses: jaywcjlove/changelog-generator@main
+        with:
+          path: ./.github/workflows/changelog.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          head-ref: ${{steps.changelog.outputs.version}}
+          original-markdown: true
+          filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+
+      - name: Generate Changelog (outputs.changelog)
+        run: echo "${{ steps.changelogEmoji.outputs.changelog }}"
+
+      - name: Generate Changelog(main)
+        uses: jaywcjlove/changelog-generator@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          custom-emoji: 'chore💻'
+          filter: '[R|r]elease[d]\s+[v|V]\d(\.\d+){0,2}'
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ steps.changelog.outputs.version }}
+          tag: ${{ steps.changelog.outputs.version }}
+          artifacts: |
+            build/libs/ServerMaster.jar
+            build/dist/ServerMaster.exe
+            build/dist/ServerMaster-Bundled.zip
+          artifactContentType: "application/octet-stream"
+          body: |
+            ${{ steps.changelog.outputs.compareurl }}
+
+            ${{ steps.changelog.outputs.changelog }}
