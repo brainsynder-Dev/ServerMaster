@@ -22,6 +22,11 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - uses: gradle/actions/setup-gradle@v5
+        id: setup-gradle
+        with:
+          gradle-version: release-candidate
+
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
@@ -39,15 +44,9 @@ jobs:
           echo "LAUNCH4J_DIR=$HOME/launch4j" >> $GITHUB_ENV
 
       # ── Artifacts ────────────────────────────────────────────────────────────
-
-      - name: Build JAR
-        run: ./gradlew shadowJar
-
-      - name: Build plain EXE (requires system Java)
-        run: ./gradlew packageExePlain -Plaunch4jDir=$LAUNCH4J_DIR
-
-      - name: Build bundled ZIP (EXE + JRE)
-        run: ./gradlew packageWindowsDist -Plaunch4jDir=$LAUNCH4J_DIR
+      - run: gradle shadowJar
+      - run: gradle packageExePlain -Plaunch4jDir=$LAUNCH4J_DIR
+      - run: gradle packageWindowsDist -Plaunch4jDir=$LAUNCH4J_DIR
 
       # ── Release ───────────────────────────────────────────────────────────────
 
