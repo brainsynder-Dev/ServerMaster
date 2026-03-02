@@ -23,6 +23,7 @@ public class LogViewer extends AnchorPane {
     private static final Pattern TIMESTAMP = Pattern.compile("\\[\\d{2}:\\d{2}:\\d{2}\\]");
 
     private String lastStyle = "log-default";
+    private boolean autoScroll = true;
     private final CodeArea codeArea = new CodeArea();
 
     public LogViewer() {
@@ -95,7 +96,12 @@ public class LogViewer extends AnchorPane {
             safeSetStyleClass(absStart, absEnd, "log-timestamp");
         }
 
-        codeArea.requestFollowCaret();
+        if (autoScroll) codeArea.requestFollowCaret();
+    }
+
+    public void setAutoScroll(boolean autoScroll) {
+        this.autoScroll = autoScroll;
+        if (autoScroll) codeArea.requestFollowCaret();
     }
 
     public void clearConsole() {

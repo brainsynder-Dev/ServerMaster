@@ -11,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -134,7 +135,15 @@ public final class MainWindow {
 
     private Region buildConsolePane() {
         var topButtons = new HBox(10);
-        topButtons.setAlignment(Pos.TOP_RIGHT);
+        topButtons.setAlignment(Pos.CENTER_LEFT);
+
+        var autoScrollToggle = new ToggleButton("Auto-Scroll");
+        autoScrollToggle.setSelected(true);
+        autoScrollToggle.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
+        autoScrollToggle.selectedProperty().addListener((obs, old, enabled) -> console.setAutoScroll(enabled));
+
+        var buttonSpacer = new Region();
+        HBox.setHgrow(buttonSpacer, Priority.ALWAYS);
 
         stopButton = new Button("STOP");
         stopButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
@@ -153,7 +162,7 @@ public final class MainWindow {
         forceStopButton.setOnAction(e -> forceStopServer());
         restartButton.setOnAction(e -> restartServer());
 
-        topButtons.getChildren().addAll(stopButton, restartButton, forceStopButton);
+        topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, stopButton, restartButton, forceStopButton);
 
         var consoleBox = new VBox(10, topButtons, console);
         consoleBox.setPadding(new Insets(14));
