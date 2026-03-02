@@ -19,6 +19,7 @@ public final class WindowButtons extends HBox {
     private double dragOffsetX;
     private double dragOffsetY;
     private boolean isMaximized = false;
+    private boolean dragStartedMaximized = false;
     private double preMaxX, preMaxY, preMaxW, preMaxH;
 
     public WindowButtons(Stage stage, boolean showMinimize){
@@ -82,12 +83,37 @@ public final class WindowButtons extends HBox {
         setOnMousePressed(e -> {
             dragOffsetX = e.getSceneX();
             dragOffsetY = e.getSceneY();
+            dragStartedMaximized = isMaximized;
             setCursor(Cursor.MOVE);
         });
 
-        setOnMouseReleased(e -> setCursor(Cursor.DEFAULT));
+        setOnMouseReleased(e -> {
+            setCursor(Cursor.DEFAULT);
+            if (dragStartedMaximized) {
+                // Re-maximize on whichever screen the window was dropped onto
+                var screens = Screen.getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
+                Rectangle2D bounds = (screens.isEmpty() ? Screen.getPrimary() : screens.get(0)).getVisualBounds();
+                preMaxX = stage.getX();
+                preMaxY = stage.getY();
+                stage.setX(bounds.getMinX());
+                stage.setY(bounds.getMinY());
+                stage.setWidth(bounds.getWidth());
+                stage.setHeight(bounds.getHeight());
+                isMaximized = true;
+                dragStartedMaximized = false;
+            }
+        });
 
         setOnMouseDragged(e -> {
+            if (dragStartedMaximized && isMaximized) {
+                // Restore to pre-maximize size, keeping cursor proportionally positioned
+                double ratio = e.getSceneX() / stage.getWidth();
+                isMaximized = false;
+                stage.setWidth(preMaxW);
+                stage.setHeight(preMaxH);
+                dragOffsetX = preMaxW * ratio;
+                dragOffsetY = e.getSceneY();
+            }
             stage.setX(e.getScreenX() - dragOffsetX);
             stage.setY(e.getScreenY() - dragOffsetY);
         });
