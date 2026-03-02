@@ -27,9 +27,6 @@ jobs:
         with:
           gradle-version: release-candidate
 
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
       - name: Cache bundled JRE
         uses: actions/cache@v4
         with:
