@@ -7,6 +7,7 @@ import org.bsdevelopment.servermaster.utils.JsonFile;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public final class SettingsService {
                 setDefault("server-path", "");
                 setDefault("server-port", 25565);
 
-                setDefault("java-path", Constants.JAVA_MANAGER.getPrimaryInstallation().getJavaExecutable().getAbsolutePath());
+                setDefault("java-path", resolveDefaultJavaPath());
                 setDefault("skip-startup-window", false);
 
                 setDefault("recent-commands", new JsonArray());
@@ -62,7 +63,7 @@ public final class SettingsService {
         file.set("server-path", settings.getServerPath() != null ? settings.getServerPath().toString() : "");
         file.set("server-port", settings.getPort());
         file.set("skip-startup-window", settings.isSkipStartupWindow());
-        file.set("java-path", settings.getJavaPath() != null ? settings.getJavaPath().toString() : Constants.JAVA_MANAGER.getPrimaryInstallation().getJavaExecutable().getAbsolutePath());
+        file.set("java-path", settings.getJavaPath() != null ? settings.getJavaPath().toString() : resolveDefaultJavaPath());
 
         file.set("recent-commands", writeRecentCommands(settings.getRecentCommands()));
 
@@ -72,6 +73,19 @@ public final class SettingsService {
     public static AppSettings get() {
         if (settings == null) throw new IllegalStateException("Settings not loaded yet");
         return settings;
+    }
+
+    private static String resolveDefaultJavaPath() {
+        var primary = Constants.JAVA_MANAGER.getPrimaryInstallation();
+        if (primary != null) return primary.getJavaExecutable().getAbsolutePath();
+
+        var highest = Constants.JAVA_MANAGER.getHighestInstallation();
+        if (highest != null) return highest.getJavaExecutable().getAbsolutePath();
+
+        // Last resort: use the JVM that is currently running this process
+        String javaHome = System.getProperty("java.home", "");
+        boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        return Paths.get(javaHome, "bin", isWindows ? "javaw.exe" : "java").toString();
     }
 
     private static List<String> readRecentCommands() {
