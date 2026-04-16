@@ -5,11 +5,7 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -39,11 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public final class ServerInstallerDialog {
@@ -203,8 +195,12 @@ public final class ServerInstallerDialog {
 
                 LogViewer.system("Executing BuildTools (this can take a while)...");
 
+                String javaExe = config.getJavaPath() != null
+                        ? config.getJavaPath().toAbsolutePath().toString()
+                        : "java";
+
                 var pb = new ProcessBuilder(
-                        "java",
+                        javaExe,
                         "-Xms" + config.getMemory() + "G",
                         "-Xmx" + config.getMemory() + "G",
                         "-jar",
