@@ -7,18 +7,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -93,6 +85,13 @@ public final class MainWindow {
         var header = new Label("ServerMaster");
         header.getStyleClass().addAll(Styles.TITLE_3);
 
+        String rawVersion = MainWindow.class.getPackage().getImplementationVersion();
+        var versionLabel = new Label(rawVersion != null ? "v" + rawVersion : "Development Build");
+        versionLabel.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+
+        var titleBox = new VBox(2, header, versionLabel);
+        titleBox.setAlignment(Pos.CENTER);
+
         ServerOutputListener outputListener = (server, stream, line) -> Platform.runLater(() -> console.appendLine(line));
         serverSelection = new ServerSelectionPane(selection, serverRunning, outputListener,
                 () -> {
@@ -123,7 +122,7 @@ public final class MainWindow {
         var spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        var box = new VBox(10, header, serverSelection, new Separator(), spacer, installer, settings);
+        var box = new VBox(10, titleBox, serverSelection, new Separator(), spacer, installer, settings);
         box.setPadding(new Insets(14));
         box.setPrefWidth(280);
         box.setAlignment(Pos.TOP_CENTER);
