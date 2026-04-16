@@ -76,12 +76,33 @@ ServerMaster originally started as a simple batch file for switching between ser
 - Application folder `Location where the application and its config & log are located`
 
 ### Installation
-1. Download latest release
-2. Place executable in its own folder
-3. Launch and configure server path
-4. Install server jars
-5. Select type, version, build
-6. Click Start Server
+
+<details>
+<summary>Windows</summary>
+
+| Download | Requirements | Instructions |
+|---|---|---|
+| `ServerMaster-Bundled.zip` | None | Extract the zip, then run `ServerMaster.exe` inside the folder |
+| `ServerMaster.exe` | Java 21+ on system `PATH` | Run directly |
+| `ServerMaster.jar` | Java 21+ | `java -jar ServerMaster.jar` |
+
+</details>
+
+<details>
+<summary>Linux</summary>
+
+| Download | Requirements | Instructions |
+|---|---|---|
+| `servermaster_*_amd64.deb` | `dpkg` | Open with your package installer **or** run `sudo dpkg -i servermaster_*_amd64.deb`, then run `servermaster` |
+| `ServerMaster.jar` | Java 21+ | `java -jar ServerMaster.jar` |
+
+</details>
+
+Once running:
+1. Configure your server folder path
+2. Install desired server jars via the installer
+3. Select type, version, and build
+4. Click **Start Server**
 
 ---
 

@@ -106,3 +106,21 @@ jobs:
             ${{ steps.changelog.outputs.compareurl }}
 
             ${{ steps.changelog.outputs.changelog }}
+
+            <details>
+            <summary>📦 How to Install</summary>
+
+            ### Windows
+            | Download | Requirements | Instructions |
+            |---|---|---|
+            | `ServerMaster-Bundled.zip` | None | Extract the zip, then run `ServerMaster.exe` inside the folder |
+            | `ServerMaster.exe` | Java 21+ on system `PATH` | Run directly |
+            | `ServerMaster.jar` | Java 21+ | `java -jar ServerMaster.jar` |
+
+            ### Linux
+            | Download | Requirements | Instructions |
+            |---|---|---|
+            | `servermaster_*_amd64.deb` | `dpkg` | Open with your package installer **or** run `sudo dpkg -i servermaster_*_amd64.deb`, then run `servermaster` |
+            | `ServerMaster.jar` | Java 21+ | `java -jar ServerMaster.jar` |
+
+            </details>
