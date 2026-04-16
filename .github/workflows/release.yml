@@ -46,6 +46,16 @@ jobs:
       - run: gradle packageExePlain -Plaunch4jDir=$LAUNCH4J_DIR
       - run: gradle packageWindowsDist -Plaunch4jDir=$LAUNCH4J_DIR
 
+      - name: Install Linux packaging tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y fakeroot dpkg
+          curl -fsSL "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -o /usr/local/bin/appimagetool
+          chmod +x /usr/local/bin/appimagetool
+
+      - run: gradle packageLinuxDeb
+      - run: gradle packageLinuxAppImage
+
       # ── Release ───────────────────────────────────────────────────────────────
 
       - run: echo "previous_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> $GITHUB_ENV
@@ -89,6 +99,8 @@ jobs:
             build/libs/ServerMaster.jar
             build/dist/ServerMaster.exe
             build/dist/ServerMaster-Bundled.zip
+            build/dist/servermaster_*_amd64.deb
+            build/dist/ServerMaster-x86_64.AppImage
           artifactContentType: "application/octet-stream"
           body: |
             ${{ steps.changelog.outputs.compareurl }}

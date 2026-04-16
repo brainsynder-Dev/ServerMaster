@@ -235,8 +235,6 @@ if (launch4jDir != null) {
     }
 }
 
-
-// ─── Distribution archives ────────────────────────────────────────────────────
 tasks.register<Zip>("packageWindowsDist") {
     group = "distribution"
     description = "Packages ServerMaster.exe + bundled JRE into ServerMaster-Bundled.zip"

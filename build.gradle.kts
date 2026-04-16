@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "org.bsdevelopment.servermaster"
-version = "1.6.3"
+version = "1.6.4"
 
 repositories {
     mavenCentral()
@@ -91,3 +91,4 @@ tasks.named("shadowDistTar") { enabled = false }
 tasks.named("shadowDistZip") { enabled = false }
 
 apply(from = "gradle/launch4j.gradle.kts")
+apply(from = "gradle/linux.gradle.kts")
