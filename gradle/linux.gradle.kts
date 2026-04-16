@@ -26,9 +26,9 @@ val downloadLinuxJre = tasks.register("downloadLinuxJre") {
         conn.inputStream.use { input -> tmp.outputStream().use { input.copyTo(it) } }
 
         logger.lifecycle("  Extracting Linux JRE...")
-        project.exec {
-            commandLine("tar", "-xzf", tmp.absolutePath, "-C", dest.absolutePath, "--strip-components=1")
-        }
+        val tarExit = ProcessBuilder("tar", "-xzf", tmp.absolutePath, "-C", dest.absolutePath, "--strip-components=1")
+            .inheritIO().start().waitFor()
+        check(tarExit == 0) { "tar extraction failed with exit code $tarExit" }
         tmp.delete()
         logger.lifecycle("  Linux JRE ready at: ${dest.absolutePath}")
     }
@@ -80,11 +80,12 @@ tasks.register("packageLinuxAppImage") {
 
         distDir.get().asFile.mkdirs()
         val outputAppImage = distDir.get().file("ServerMaster-x86_64.AppImage").asFile
-        project.exec {
-            environment("ARCH", "x86_64")
-            environment("APPIMAGE_EXTRACT_AND_RUN", "1")
-            commandLine("appimagetool", appDir.absolutePath, outputAppImage.absolutePath)
-        }
+        val appImagePb = ProcessBuilder("appimagetool", appDir.absolutePath, outputAppImage.absolutePath)
+            .inheritIO()
+        appImagePb.environment()["ARCH"] = "x86_64"
+        appImagePb.environment()["APPIMAGE_EXTRACT_AND_RUN"] = "1"
+        val appImageExit = appImagePb.start().waitFor()
+        check(appImageExit == 0) { "appimagetool failed with exit code $appImageExit" }
         logger.lifecycle("  AppImage created at: ${outputAppImage.absolutePath}")
     }
 }
@@ -154,9 +155,9 @@ tasks.register("packageLinuxDeb") {
 
         distDir.get().asFile.mkdirs()
         val debOut = "${distDir.get().asFile.absolutePath}/servermaster_${appVersion}_amd64.deb"
-        project.exec {
-            commandLine("fakeroot", "dpkg-deb", "--build", debRoot.absolutePath, debOut)
-        }
+        val debExit = ProcessBuilder("fakeroot", "dpkg-deb", "--build", debRoot.absolutePath, debOut)
+            .inheritIO().start().waitFor()
+        check(debExit == 0) { "dpkg-deb failed with exit code $debExit" }
         logger.lifecycle("  .deb created at: $debOut")
     }
 }
