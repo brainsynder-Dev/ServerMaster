@@ -50,7 +50,7 @@ public class Server {
             throw new IOException("Missing runtime jar: " + runtimeJar + " (expected instanceCatalog.copyToRuntimeJar(...) to run first)");
         }
 
-        updateServerProperties(serverRoot);
+        disableNether(serverRoot);
 
         List<String> options = getJavaOptions(config, runtimeJar);
 
@@ -65,7 +65,12 @@ public class Server {
         });
     }
 
-    private void updateServerProperties(Path serverRoot) {
+    /**
+     * Sets {@code allow-nether=false} in server.properties.
+     * Minecraft has no equivalent config-level switch for the nether (unlike the End),
+     * so this is the only reliable way to prevent the nether from loading.
+     */
+    private void disableNether(Path serverRoot) {
         Properties prop = new Properties();
         File serverProp = serverRoot.resolve("server.properties").toFile();
 
@@ -76,10 +81,8 @@ public class Server {
                 }
             }
 
-            String worldName = "World_" + serverVersion;
-
-            LogViewer.system("Updating level-name to " + worldName);
-            prop.setProperty("level-name", worldName);
+            prop.setProperty("allow-nether", "false");
+            LogViewer.system("Disabling nether (allow-nether=false)");
 
             try (FileOutputStream fos = new FileOutputStream(serverProp)) {
                 prop.store(fos, null);

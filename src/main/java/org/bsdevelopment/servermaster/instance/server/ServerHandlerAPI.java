@@ -2,10 +2,12 @@ package org.bsdevelopment.servermaster.instance.server;
 
 import org.bsdevelopment.servermaster.Constants;
 import org.bsdevelopment.servermaster.ServerMasterApp;
+import org.bsdevelopment.servermaster.instance.WorldInstanceManager;
 import org.bsdevelopment.servermaster.instance.server.thread.ServerOutputListener;
 import org.bsdevelopment.servermaster.instance.server.thread.ServerThreadCallback;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -23,6 +25,9 @@ public final class ServerHandlerAPI {
         try {
             Integer buildNumber = parseBuildNumber(build);
             ServerMasterApp.instanceCatalog.copyToRuntimeJar(serverType, version, buildNumber);
+
+            Path serverRoot = ServerMasterApp.serverWrapper().serverRoot();
+            WorldInstanceManager.swapWorld(serverRoot, serverType, version);
 
             server.start(config, output, onExit);
         } catch (IOException | RuntimeException e) {
