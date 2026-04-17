@@ -28,6 +28,7 @@ import org.bsdevelopment.servermaster.ui.window.WindowSurface;
 import org.bsdevelopment.servermaster.utils.FX;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class MainWindow {
@@ -260,7 +261,7 @@ public final class MainWindow {
 
         List<String> history = settings.getRecentCommands();
         if (history == null) {
-            history = new java.util.ArrayList<>();
+            history = new ArrayList<>();
             settings.setRecentCommands(history);
         }
 

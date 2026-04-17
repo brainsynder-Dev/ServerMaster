@@ -2,6 +2,7 @@ package org.bsdevelopment.servermaster;
 
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
@@ -9,7 +10,7 @@ import java.util.Arrays;
 
 public class Launcher {
     public static void main(String[] args) {
-        var logFile = Constants.WORKING_PATH.resolve("startup.log");
+        var logFile = resolveLogPath();
         logFile.toFile().delete();
 
         try {
@@ -49,5 +50,27 @@ public class Launcher {
         }
 
         ServerMasterApp.main(args);
+    }
+
+    private static Path resolveLogPath() {
+        boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        String home = System.getProperty("user.home");
+
+        Path dir;
+        if (windows) {
+            String appData = System.getenv("APPDATA");
+            dir = Path.of(appData != null ? appData : home).resolve("ServerMaster");
+        } else {
+            String xdgData = System.getenv("XDG_DATA_HOME");
+            dir = Path.of(xdgData != null ? xdgData : home + "/.local/share").resolve("servermaster");
+        }
+
+        try {
+            Files.createDirectories(dir);
+        } catch (Exception ignored) {
+            return Constants.WORKING_PATH.resolve("startup.log");
+        }
+
+        return dir.resolve("startup.log");
     }
 }

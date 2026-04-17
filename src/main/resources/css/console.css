@@ -45,4 +45,8 @@
     -fx-fill: #4FC3F7;
     -fx-font-weight: bold;
 }
+.log-update {
+    -fx-fill: #eaad19;
+    -fx-font-weight: bold;
+}
 

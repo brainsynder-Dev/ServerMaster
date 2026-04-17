@@ -12,6 +12,8 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import org.bsdevelopment.servermaster.backend.AppUpdater;
+import org.bsdevelopment.servermaster.backend.GitHubUpdateChecker;
 import org.bsdevelopment.servermaster.backend.ViaJenkinsPluginUpdater;
 import org.bsdevelopment.servermaster.components.ServerSelection;
 import org.bsdevelopment.servermaster.config.SettingsService;
@@ -19,6 +21,7 @@ import org.bsdevelopment.servermaster.instance.InstanceCatalog;
 import org.bsdevelopment.servermaster.instance.server.ServerHandlerAPI;
 import org.bsdevelopment.servermaster.instance.server.ServerWrapper;
 import org.bsdevelopment.servermaster.ui.MainWindow;
+import org.bsdevelopment.servermaster.ui.UpdateFoundWindow;
 import org.bsdevelopment.servermaster.ui.dialog.SettingsDialog;
 
 import java.io.IOException;
@@ -81,7 +84,21 @@ public class ServerMasterApp extends Application {
         var selection = new ServerSelection("", "", "");
         new MainWindow(selection).show();
 
-        new Thread(() -> new ViaJenkinsPluginUpdater().runOnStartup()).start();
+        new Thread(() -> new ViaJenkinsPluginUpdater().runOnStartup(), "servermaster-via-updater").start();
+
+        new Thread(() -> {
+            String currentVersion = ServerMasterApp.class.getPackage().getImplementationVersion();
+            new GitHubUpdateChecker().checkForUpdate(currentVersion).ifPresent(release ->
+                Platform.runLater(() -> {
+                    AppUpdater updater = new AppUpdater();
+                    new UpdateFoundWindow(
+                            release.version(),
+                            () -> new Thread(() -> updater.downloadAndRestart(release.jarDownloadUrl()), "servermaster-updater").start(),
+                            () -> {}
+                    ).show();
+                })
+            );
+        }, "servermaster-update-check").start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stopBuildToolsIfRunning();

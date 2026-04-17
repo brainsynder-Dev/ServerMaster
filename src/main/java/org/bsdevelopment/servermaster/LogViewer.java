@@ -64,6 +64,13 @@ public class LogViewer extends AnchorPane {
         Platform.runLater(() -> viewer.appendSystemMessage(message));
     }
 
+    public static void update(String message) {
+        LogViewer viewer = ACTIVE_INSTANCE;
+        if (viewer == null) return;
+
+        Platform.runLater(() -> viewer.appendUpdateMessage(message));
+    }
+
     /** Raw console line piping (BuildTools/server output). */
     public static void console(String line) {
         LogViewer viewer = ACTIVE_INSTANCE;
@@ -110,6 +117,9 @@ public class LogViewer extends AnchorPane {
 
     public void appendSystemMessage(String message) {
         appendStyledLine("[ServerMaster] " + message, "log-system");
+    }
+    public void appendUpdateMessage(String message) {
+        appendStyledLine("[ServerMaster Updater] " + message, "log-update");
     }
 
     public void appendStyledLine(String text, String styleClass) {

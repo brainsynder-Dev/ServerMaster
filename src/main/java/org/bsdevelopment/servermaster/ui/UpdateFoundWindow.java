@@ -19,33 +19,31 @@ import org.bsdevelopment.servermaster.utils.Outline;
 public final class UpdateFoundWindow {
     private final Stage stage;
 
-    public UpdateFoundWindow(Runnable onUpdate, Runnable onContinue) {
+    public UpdateFoundWindow(String newVersion, Runnable onUpdate, Runnable onContinue) {
         stage = new Stage();
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.setTitle("ServerMaster");
-
 
         var windowButtons = new WindowButtons(stage, false);
         windowButtons.setStyle("-fx-background-color: transparent;");
 
         var title = new Label("ServerMaster");
         title.getStyleClass().addAll(Styles.TITLE_1, Styles.DANGER);
-        title.setPadding(new Insets(0, 0, 0, 0));
         title.setAlignment(Pos.TOP_CENTER);
 
         var subtitle = new Label("UPDATE DETECTED");
         subtitle.getStyleClass().addAll(Styles.TEXT_BOLD, Styles.DANGER);
 
-        var body = new Label("""
-            A new update has been detected.
-            If you would like to click Update.
-            Otherwise press Continue.
-            """.trim());
+        var versionLabel = new Label("Version " + newVersion + " is available");
+        versionLabel.getStyleClass().add(Styles.TEXT_MUTED);
 
         var updateBtn = new Button("UPDATE");
         updateBtn.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
         updateBtn.setMaxWidth(Double.MAX_VALUE);
-        updateBtn.setOnAction(e -> onUpdate.run());
+        updateBtn.setOnAction(e -> {
+            stage.close();
+            onUpdate.run();
+        });
 
         var contBtn = new Button("CONTINUE");
         contBtn.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
@@ -55,18 +53,10 @@ public final class UpdateFoundWindow {
             onContinue.run();
         });
 
-        var flow = new VBox(
-                new Label("A new update has been detected"),
-                new Label("If you would like to click Update"),
-                new Label("Otherwise press Continue")
-        );
-        flow.setMaxWidth(380);
-        flow.setAlignment(Pos.CENTER);
-
         var titleBox = new VBox(0, title, subtitle);
         titleBox.setAlignment(Pos.TOP_CENTER);
 
-        var content = new VBox(12, titleBox, flow, updateBtn, contBtn);
+        var content = new VBox(12, titleBox, versionLabel, updateBtn, contBtn);
         content.setPadding(new Insets(0, 16, 16, 16));
         content.setAlignment(Pos.CENTER);
 
@@ -76,7 +66,7 @@ public final class UpdateFoundWindow {
         surface.getStyleClass().add(Outline.DANGER.getCssClass());
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 420, 340);
+        var scene = new Scene(surface, 420, 280);
         scene.setFill(Color.TRANSPARENT);
         FX.addStyleSheet(scene);
         stage.setScene(scene);

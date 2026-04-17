@@ -71,7 +71,18 @@ tasks.register("packageLinuxAppImage") {
         appRun.writeText(
             "#!/bin/sh\n" +
             "HERE=\"${d}(dirname \"${d}(readlink -f \"${d}0\")\")\"\n" +
-            "exec \"${d}HERE/usr/lib/servermaster/jre/bin/java\" -jar \"${d}HERE/usr/lib/servermaster/ServerMaster.jar\" \"${d}@\"\n"
+            "LOCAL_DIR=\"${d}HOME/.local/share/servermaster\"\n" +
+            "LOCAL_JAR=\"${d}LOCAL_DIR/ServerMaster.jar\"\n" +
+            "LAUNCH_LOG=\"${d}LOCAL_DIR/startup.log\"\n" +
+            "BUNDLED_JAR=\"${d}HERE/usr/lib/servermaster/ServerMaster.jar\"\n" +
+            "mkdir -p \"${d}LOCAL_DIR\"\n" +
+            "MAGIC=\"${d}(od -An -tx1 -N4 \"${d}LOCAL_JAR\" 2>/dev/null | tr -d ' \\n')\"\n" +
+            "if [ ! -f \"${d}LOCAL_JAR\" ] || [ \"${d}MAGIC\" != \"504b0304\" ]; then\n" +
+            "    echo \"[AppRun] Installing/repairing JAR\" >>\"${d}LAUNCH_LOG\"\n" +
+            "    rm -f \"${d}LOCAL_JAR\"\n" +
+            "    cp \"${d}BUNDLED_JAR\" \"${d}LOCAL_JAR\" 2>>\"${d}LAUNCH_LOG\" || echo \"[AppRun] JAR copy failed\" >>\"${d}LAUNCH_LOG\"\n" +
+            "fi\n" +
+            "exec \"${d}HERE/usr/lib/servermaster/jre/bin/java\" -Dprism.order=sw -jar \"${d}LOCAL_JAR\" \"${d}@\" 2>>\"${d}LAUNCH_LOG\"\n"
         )
         java.nio.file.Files.setPosixFilePermissions(
             appRun.toPath(),
@@ -99,16 +110,16 @@ tasks.register("packageLinuxDeb") {
 
     doLast {
         val debRoot = linuxBuildDir.get().dir("deb").asFile
-        val installDir = File(debRoot, "opt/servermaster")
+        val systemDir = File(debRoot, "usr/share/servermaster")
         val debian = File(debRoot, "DEBIAN")
         val usrBin = File(debRoot, "usr/bin")
         val appsDir = File(debRoot, "usr/share/applications")
         val iconsDir = File(debRoot, "usr/share/icons/hicolor/256x256/apps")
 
-        listOf(installDir, debian, usrBin, appsDir, iconsDir).forEach { it.mkdirs() }
+        listOf(systemDir, debian, usrBin, appsDir, iconsDir).forEach { it.mkdirs() }
 
-        project.copy { from(jarFile); into(installDir) }
-        project.copy { from(linuxJreDir); into(File(installDir, "jre")) }
+        project.copy { from(jarFile); into(systemDir) }
+        project.copy { from(linuxJreDir); into(File(systemDir, "jre")) }
         project.copy { from(iconPng); into(iconsDir); rename { "servermaster.png" } }
 
         File(appsDir, "servermaster.desktop").writeText(
@@ -128,7 +139,14 @@ tasks.register("packageLinuxDeb") {
         val launcher = File(usrBin, "servermaster")
         launcher.writeText(
             "#!/bin/sh\n" +
-            "exec /opt/servermaster/jre/bin/java -jar /opt/servermaster/ServerMaster.jar \"${d}@\"\n"
+            "LOCAL_DIR=\"${d}HOME/.local/share/servermaster\"\n" +
+            "LOCAL_JAR=\"${d}LOCAL_DIR/ServerMaster.jar\"\n" +
+            "LAUNCH_LOG=\"${d}LOCAL_DIR/startup.log\"\n" +
+            "mkdir -p \"${d}LOCAL_DIR\"\n" +
+            "if [ ! -f \"${d}LOCAL_JAR\" ]; then\n" +
+            "    cp /usr/share/servermaster/ServerMaster.jar \"${d}LOCAL_JAR\" 2>>\"${d}LAUNCH_LOG\" || echo \"[launcher] JAR copy failed\" >>\"${d}LAUNCH_LOG\"\n" +
+            "fi\n" +
+            "exec /usr/share/servermaster/jre/bin/java -Dprism.order=sw -jar \"${d}LOCAL_JAR\" \"${d}@\" 2>>\"${d}LAUNCH_LOG\"\n"
         )
         java.nio.file.Files.setPosixFilePermissions(launcher.toPath(), posix755)
 
