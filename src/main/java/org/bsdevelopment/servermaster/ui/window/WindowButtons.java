@@ -80,15 +80,17 @@ public final class WindowButtons extends HBox {
         if (showMinimize) getChildren().addAll(minimize, maximize);
         getChildren().add(close);
 
+        setCursor(Cursor.OPEN_HAND);
+
         setOnMousePressed(e -> {
             dragOffsetX = e.getSceneX();
             dragOffsetY = e.getSceneY();
             dragStartedMaximized = isMaximized;
-            setCursor(Cursor.MOVE);
+            setCursor(Cursor.CLOSED_HAND);
         });
 
         setOnMouseReleased(e -> {
-            setCursor(Cursor.DEFAULT);
+            setCursor(Cursor.OPEN_HAND);
             if (dragStartedMaximized) {
                 // Re-maximize on whichever screen the window was dropped onto
                 var screens = Screen.getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
