@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 public interface Constants {
     Logger LOGGER = Logger.getLogger("ServerMaster");
     Path WORKING_PATH = new File(".").toPath();
+    boolean DEV_MODE = Constants.class.getPackage().getImplementationVersion() == null;
 
     SystemInfo SYSTEM_INFO = new SystemInfo();
     long MAX_RAM = SYSTEM_INFO.getHardware().getMemory().getAvailable();
