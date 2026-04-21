@@ -7,6 +7,7 @@ import javafx.scene.Cursor;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Screen;
@@ -14,6 +15,11 @@ import javafx.stage.Stage;
 import org.bsdevelopment.servermaster.ServerMasterApp;
 import org.bsdevelopment.servermaster.instance.server.ServerHandlerAPI;
 import org.bsdevelopment.servermaster.utils.FX;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeBrands;
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.awt.*;
+import java.net.URI;
 
 public final class WindowButtons extends HBox {
     private double dragOffsetX;
@@ -76,7 +82,7 @@ public final class WindowButtons extends HBox {
         });
         FX.createTooltip(close, "Close Window");
 
-        getChildren().add(spacer);
+        getChildren().addAll(githubButton(), spacer);
         if (showMinimize) getChildren().addAll(minimize, maximize);
         getChildren().add(close);
 
@@ -119,6 +125,25 @@ public final class WindowButtons extends HBox {
             stage.setX(e.getScreenX() - dragOffsetX);
             stage.setY(e.getScreenY() - dragOffsetY);
         });
+    }
+
+    private static StackPane githubButton() {
+        var background = new Circle(8, Color.web("#24292f"));
+        background.setStroke(Color.rgb(0, 0, 0, 0.35));
+
+        var icon = new FontIcon(FontAwesomeBrands.GITHUB);
+        icon.setIconSize(11);
+        icon.setIconColor(Color.WHITE);
+
+        var pane = new StackPane(background, icon);
+        pane.setCursor(Cursor.HAND);
+        FX.createTooltip(pane, "View on GitHub");
+        pane.setOnMouseClicked(e -> new Thread(() -> {
+            try {
+                Desktop.getDesktop().browse(new URI("https://github.com/brainsynder-Dev/ServerMaster"));
+            } catch (Exception ignored) {}
+        }, "servermaster-github-open").start());
+        return pane;
     }
 
     private static Circle circle(Color color) {
