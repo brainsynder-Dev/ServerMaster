@@ -24,7 +24,10 @@ import org.bsdevelopment.servermaster.ui.MainWindow;
 import org.bsdevelopment.servermaster.ui.UpdateFoundWindow;
 import org.bsdevelopment.servermaster.ui.dialog.SettingsDialog;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ServerMasterApp extends Application {
     public static InstanceCatalog instanceCatalog;
@@ -84,7 +87,7 @@ public class ServerMasterApp extends Application {
         var selection = new ServerSelection("", "", "");
         new MainWindow(selection).show();
 
-        new Thread(() -> new ViaJenkinsPluginUpdater().runOnStartup(), "servermaster-via-updater").start();
+        if (!Constants.DEV_MODE) new Thread(() -> new ViaJenkinsPluginUpdater().runOnStartup(), "servermaster-via-updater").start();
 
         new Thread(() -> {
             String currentVersion = ServerMasterApp.class.getPackage().getImplementationVersion();
@@ -140,8 +143,28 @@ public class ServerMasterApp extends Application {
         process.destroyForcibly();
     }
 
+    private static File resolveConfigFile() {
+        boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        String home = System.getProperty("user.home");
+        Path dir;
+        if (windows) {
+            String appData = System.getenv("APPDATA");
+            dir = Path.of(appData != null ? appData : home).resolve("ServerMaster");
+        } else {
+            String xdgData = System.getenv("XDG_DATA_HOME");
+            dir = Path.of(xdgData != null ? xdgData : home + "/.local/share").resolve("servermaster");
+        }
+
+        try {
+            Files.createDirectories(dir);
+        } catch (Exception ignored) {
+            return Constants.WORKING_PATH.resolve("configuration.json").toFile();
+        }
+        return dir.resolve("configuration.json").toFile();
+    }
+
     public static void main(String[] args) {
-        SettingsService.load(Constants.WORKING_PATH.resolve("configuration.json").toFile());
+        SettingsService.load(resolveConfigFile());
 
         try {
             if (SettingsService.get().isInitialized()) instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
