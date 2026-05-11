@@ -1,6 +1,7 @@
 package org.bsdevelopment.servermaster.ui;
 
 import atlantafx.base.theme.Styles;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -14,6 +15,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import org.bsdevelopment.servermaster.LogViewer;
 import org.bsdevelopment.servermaster.ServerMasterApp;
 import org.bsdevelopment.servermaster.components.ServerSelection;
@@ -39,6 +41,7 @@ public final class MainWindow {
     private ServerSelectionPane serverSelection;
     private Button stopButton;
     private Button restartButton;
+    private Button quickRestartButton;
     private Button forceStopButton;
     private volatile boolean restartPending;
     private int historyIndex = -1;
@@ -153,16 +156,25 @@ public final class MainWindow {
 
         forceStopButton = new Button("FORCE STOP");
         forceStopButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.DANGER);
+        forceStopButton.setMaxWidth(Double.MAX_VALUE);
+
+        quickRestartButton = new Button("QUICK RESTART");
+        quickRestartButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.WARNING);
+        quickRestartButton.setMaxWidth(Double.MAX_VALUE);
 
         stopButton.disableProperty().bind(serverRunning.not());
         restartButton.disableProperty().bind(serverRunning.not());
+        quickRestartButton.disableProperty().bind(serverRunning.not());
         forceStopButton.disableProperty().bind(serverRunning.not());
 
         stopButton.setOnAction(e -> stopServer());
         forceStopButton.setOnAction(e -> forceStopServer());
         restartButton.setOnAction(e -> restartServer());
+        quickRestartButton.setOnAction(e -> quickRestartServer());
 
-        topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, stopButton, restartButton, forceStopButton);
+        var stopGroup = new VBox(4, forceStopButton, quickRestartButton);
+
+        topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, stopButton, restartButton, stopGroup);
 
         var consoleBox = new VBox(10, topButtons, console);
         consoleBox.setPadding(new Insets(14));
@@ -293,11 +305,20 @@ public final class MainWindow {
         console.appendSystemMessage("Restart requested ...");
 
         restartPending = true;
-        attachRestartCallback();
+        attachRestartCallback(0);
         ServerHandlerAPI.stopServer();
     }
 
-    private void attachRestartCallback() {
+    private void quickRestartServer() {
+        if (!serverRunning.get()) return;
+        console.appendSystemMessage("Quick restart requested, force stopping server ...");
+
+        restartPending = true;
+        attachRestartCallback(3);
+        ServerHandlerAPI.killServer();
+    }
+
+    private void attachRestartCallback(int delaySeconds) {
         var wrapper = ServerMasterApp.serverWrapper();
         var server = wrapper != null ? wrapper.getServer() : null;
         if (server == null || server.getThread() == null) return;
@@ -307,8 +328,15 @@ public final class MainWindow {
 
             restartPending = false;
             Platform.runLater(() -> {
-                console.appendSystemMessage("Starting server again ...");
-                serverSelection.startSelectedServer();
+                if (delaySeconds <= 0) {
+                    console.appendSystemMessage("Starting server again ...");
+                    serverSelection.startSelectedServer();
+                } else {
+                    console.appendSystemMessage("Starting server in " + delaySeconds + " seconds ...");
+                    var pause = new PauseTransition(Duration.seconds(delaySeconds));
+                    pause.setOnFinished(e -> serverSelection.startSelectedServer());
+                    pause.play();
+                }
             });
         });
     }
