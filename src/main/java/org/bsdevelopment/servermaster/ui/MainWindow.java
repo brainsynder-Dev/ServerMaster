@@ -39,10 +39,8 @@ public final class MainWindow {
     private final LogViewer console;
     private final BooleanProperty serverRunning = new SimpleBooleanProperty(false);
     private ServerSelectionPane serverSelection;
-    private Button stopButton;
-    private Button restartButton;
-    private Button quickRestartButton;
-    private Button forceStopButton;
+    private SplitMenuButton stopButton;
+    private SplitMenuButton restartButton;
     private volatile boolean restartPending;
     private int historyIndex = -1;
     private String historyDraft = "";
@@ -148,33 +146,18 @@ public final class MainWindow {
         var buttonSpacer = new Region();
         HBox.setHgrow(buttonSpacer, Priority.ALWAYS);
 
-        stopButton = new Button("STOP");
+        stopButton = new SplitMenuButton();
         stopButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
-
-        restartButton = new Button("RESTART");
-        restartButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
-
-        forceStopButton = new Button("FORCE STOP");
-        forceStopButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.DANGER);
-        forceStopButton.setMaxWidth(Double.MAX_VALUE);
-
-        quickRestartButton = new Button("QUICK RESTART");
-        quickRestartButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.WARNING);
-        quickRestartButton.setMaxWidth(Double.MAX_VALUE);
-
         stopButton.disableProperty().bind(serverRunning.not());
+
+        restartButton = new SplitMenuButton();
+        restartButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
         restartButton.disableProperty().bind(serverRunning.not());
-        quickRestartButton.disableProperty().bind(serverRunning.not());
-        forceStopButton.disableProperty().bind(serverRunning.not());
 
-        stopButton.setOnAction(e -> stopServer());
-        forceStopButton.setOnAction(e -> forceStopServer());
-        restartButton.setOnAction(e -> restartServer());
-        quickRestartButton.setOnAction(e -> quickRestartServer());
+        configureStopButton();
+        configureRestartButton();
 
-        var stopGroup = new VBox(4, forceStopButton, quickRestartButton);
-
-        topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, stopButton, restartButton, stopGroup);
+        topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, restartButton, stopButton);
 
         var consoleBox = new VBox(10, topButtons, console);
         consoleBox.setPadding(new Insets(14));
@@ -339,6 +322,69 @@ public final class MainWindow {
                 }
             });
         });
+    }
+
+    private void configureStopButton() {
+        var settings = SettingsService.get();
+        stopButton.getItems().clear();
+        stopButton.getStyleClass().removeAll(Styles.DANGER, Styles.WARNING, Styles.ACCENT);
+
+        if (settings.isForceStopDefault()) {
+            stopButton.setText("FORCE STOP");
+            stopButton.getStyleClass().add(Styles.DANGER);
+            stopButton.setOnAction(e -> forceStopServer());
+
+            var alternate = new MenuItem("Stop");
+            alternate.setOnAction(e -> {
+                SettingsService.get().setForceStopDefault(false);
+                SettingsService.save();
+                configureStopButton();
+            });
+            stopButton.getItems().add(alternate);
+        } else {
+            stopButton.setText("STOP");
+            stopButton.setOnAction(e -> stopServer());
+
+            var alternate = new MenuItem("Force Stop");
+            alternate.setOnAction(e -> {
+                SettingsService.get().setForceStopDefault(true);
+                SettingsService.save();
+                configureStopButton();
+            });
+            stopButton.getItems().add(alternate);
+        }
+    }
+
+    private void configureRestartButton() {
+        var settings = SettingsService.get();
+        restartButton.getItems().clear();
+        restartButton.getStyleClass().removeAll(Styles.DANGER, Styles.WARNING, Styles.ACCENT);
+
+        if (settings.isQuickRestartDefault()) {
+            restartButton.setText("QUICK RESTART");
+            restartButton.getStyleClass().add(Styles.WARNING);
+            restartButton.setOnAction(e -> quickRestartServer());
+
+            var alternate = new MenuItem("Restart");
+            alternate.setOnAction(e -> {
+                SettingsService.get().setQuickRestartDefault(false);
+                SettingsService.save();
+                configureRestartButton();
+            });
+            restartButton.getItems().add(alternate);
+        } else {
+            restartButton.setText("RESTART");
+            restartButton.getStyleClass().add(Styles.ACCENT);
+            restartButton.setOnAction(e -> restartServer());
+
+            var alternate = new MenuItem("Quick Restart");
+            alternate.setOnAction(e -> {
+                SettingsService.get().setQuickRestartDefault(true);
+                SettingsService.save();
+                configureRestartButton();
+            });
+            restartButton.getItems().add(alternate);
+        }
     }
 
     public void show() {

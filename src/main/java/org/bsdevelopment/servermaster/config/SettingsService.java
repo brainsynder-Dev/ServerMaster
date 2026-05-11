@@ -26,6 +26,8 @@ public final class SettingsService {
 
                 setDefault("java-path", resolveDefaultJavaPath());
                 setDefault("skip-startup-window", false);
+                setDefault("force-stop-default", false);
+                setDefault("quick-restart-default", false);
 
                 setDefault("recent-commands", new JsonArray());
             }
@@ -43,6 +45,8 @@ public final class SettingsService {
         settings.setMemory(memory);
         settings.setPort(port);
         settings.setSkipStartupWindow(file.getBoolean("skip-startup-window", false));
+        settings.setForceStopDefault(file.getBoolean("force-stop-default", false));
+        settings.setQuickRestartDefault(file.getBoolean("quick-restart-default", false));
 
         if (!javaPath.isBlank()) {
             settings.setJavaPath(Path.of(javaPath));
@@ -63,6 +67,8 @@ public final class SettingsService {
         file.set("server-path", settings.getServerPath() != null ? settings.getServerPath().toString() : "");
         file.set("server-port", settings.getPort());
         file.set("skip-startup-window", settings.isSkipStartupWindow());
+        file.set("force-stop-default", settings.isForceStopDefault());
+        file.set("quick-restart-default", settings.isQuickRestartDefault());
         file.set("java-path", settings.getJavaPath() != null ? settings.getJavaPath().toString() : resolveDefaultJavaPath());
 
         file.set("recent-commands", writeRecentCommands(settings.getRecentCommands()));

@@ -20,6 +20,9 @@ public class AppSettings {
 
     private boolean skipStartupWindow = false;
 
+    private boolean forceStopDefault = false;
+    private boolean quickRestartDefault = false;
+
     private List<String> recentCommands = new ArrayList<>();
 
     public boolean isInitialized() {
