@@ -18,17 +18,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class BackendApiService {
-    private static final String BASE_URL = "https://dev.bsdevelopment.org/api/servermaster";
+    private static final String BASE_URL = "https://bsdevelopment.org/api/servermaster";
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
