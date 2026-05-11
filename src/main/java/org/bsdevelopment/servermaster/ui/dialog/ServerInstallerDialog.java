@@ -5,7 +5,10 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -49,6 +52,7 @@ public final class ServerInstallerDialog {
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private Button installBtn;
+    private final Label statusLabel;
     private List<BackendApiService.BuildInfo> currentBuilds = new ArrayList<>();
 
     public ServerInstallerDialog(Stage owner) throws IOException, InterruptedException {
@@ -136,6 +140,12 @@ public final class ServerInstallerDialog {
         progressBar.setMaxWidth(Double.MAX_VALUE);
         progressBar.setVisible(false);
 
+        statusLabel = new Label();
+        statusLabel.setWrapText(true);
+        statusLabel.setMaxWidth(Double.MAX_VALUE);
+        statusLabel.setVisible(false);
+        statusLabel.managedProperty().bind(statusLabel.visibleProperty());
+
         installBtn.setOnAction(e -> {
             try {
                 if (SPIGOT_TYPE.equalsIgnoreCase(type.getValue())) {
@@ -157,7 +167,7 @@ public final class ServerInstallerDialog {
             }
         });
 
-        var content = new VBox(12, header, form, installBtn, progressBar);
+        var content = new VBox(12, header, form, installBtn, progressBar, statusLabel);
         content.setPadding(new Insets(10, 16, 0, 16));
 
         var surface = new WindowSurface();
@@ -319,6 +329,7 @@ public final class ServerInstallerDialog {
         installBtn.setDisable(true);
         progress.setVisible(true);
         progress.setProgress(0);
+        statusLabel.setVisible(false);
 
         try {
             Files.createDirectories(folder);
@@ -380,12 +391,10 @@ public final class ServerInstallerDialog {
             progress.setVisible(false);
             installBtn.setDisable(false);
 
-            var alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.initStyle(StageStyle.TRANSPARENT);
-            alert.initOwner(stage);
-            alert.setHeaderText("Install Complete");
-            alert.setContentText("Install has been completed for '" + fileName + "'");
-            alert.show();
+            statusLabel.getStyleClass().removeAll(Styles.DANGER);
+            statusLabel.getStyleClass().add(Styles.SUCCESS);
+            statusLabel.setText("Installed: " + fileName);
+            statusLabel.setVisible(true);
 
             ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
         });
@@ -397,13 +406,10 @@ public final class ServerInstallerDialog {
             installBtn.setDisable(false);
 
             Throwable ex = task.getException();
-
-            var alert = new Alert(Alert.AlertType.ERROR);
-            alert.initStyle(StageStyle.TRANSPARENT);
-            alert.initOwner(stage);
-            alert.setHeaderText("Install Failed");
-            alert.setContentText(ex == null ? "Unknown error" : ex.getMessage());
-            alert.show();
+            statusLabel.getStyleClass().removeAll(Styles.SUCCESS);
+            statusLabel.getStyleClass().add(Styles.DANGER);
+            statusLabel.setText(ex == null ? "Unknown error" : ex.getMessage());
+            statusLabel.setVisible(true);
         });
 
         task.setOnCancelled(e -> {
