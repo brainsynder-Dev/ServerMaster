@@ -4,7 +4,6 @@ import atlantafx.base.theme.Styles;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -12,7 +11,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -185,10 +183,7 @@ public final class ServerInstallerDialog {
         surface.setCenter(content);
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 520, 640);
-        scene.setFill(Color.TRANSPARENT);
-        FX.addStyleSheet(scene);
-        stage.setScene(scene);
+        FX.buildDialogScene(stage, surface, 520, 640);
     }
 
     private ToggleButton createTypeTile(String project, ToggleGroup group) {
@@ -685,7 +680,6 @@ public final class ServerInstallerDialog {
     }
 
     public void show() {
-        stage.show();
-        stage.centerOnScreen();
+        FX.showDialog(stage);
     }
 }

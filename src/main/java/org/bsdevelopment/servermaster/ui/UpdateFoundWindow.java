@@ -3,12 +3,10 @@ package org.bsdevelopment.servermaster.ui;
 import atlantafx.base.theme.Styles;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.bsdevelopment.servermaster.ui.window.WindowButtons;
@@ -66,14 +64,10 @@ public final class UpdateFoundWindow {
         surface.getStyleClass().add(Outline.DANGER.getCssClass());
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 420, 280);
-        scene.setFill(Color.TRANSPARENT);
-        FX.addStyleSheet(scene);
-        stage.setScene(scene);
+        FX.buildDialogScene(stage, surface, 420, 280);
     }
 
     public void show() {
-        stage.show();
-        stage.centerOnScreen();
+        FX.showDialog(stage);
     }
 }

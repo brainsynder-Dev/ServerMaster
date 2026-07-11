@@ -6,20 +6,8 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.Tooltip;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -94,16 +82,11 @@ public final class JavaVersionDialog {
         surface.setCenter(content);
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 900, 520);
-        scene.setFill(Color.TRANSPARENT);
-        FX.addStyleSheet(scene);
-
-        stage.setScene(scene);
+        FX.buildDialogScene(stage, surface, 900, 520);
     }
 
     public void show() {
-        stage.show();
-        stage.centerOnScreen();
+        FX.showDialog(stage);
     }
 
     private static TableView<JavaInstallation> createTable() {

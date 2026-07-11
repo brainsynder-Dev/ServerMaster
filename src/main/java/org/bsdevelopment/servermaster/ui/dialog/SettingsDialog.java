@@ -4,10 +4,8 @@ import atlantafx.base.theme.Styles;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -227,10 +225,7 @@ public final class SettingsDialog {
         surface.setCenter(content);
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 620, 560);
-        scene.setFill(Color.TRANSPARENT);
-        FX.addStyleSheet(scene);
-        stage.setScene(scene);
+        FX.buildDialogScene(stage, surface, 620, 560);
 
         if (required) {
             stage.setOnHidden(e -> {
@@ -240,8 +235,7 @@ public final class SettingsDialog {
     }
 
     public void show() {
-        stage.show();
-        stage.centerOnScreen();
+        FX.showDialog(stage);
     }
 
     private static long clampRam(long ramGb) {
