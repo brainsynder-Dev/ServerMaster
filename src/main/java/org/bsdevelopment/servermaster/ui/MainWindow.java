@@ -7,12 +7,14 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -479,7 +481,16 @@ public final class MainWindow {
     }
 
     public void show() {
+        Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+
+        double width = Math.min(stage.getScene().getWidth(), bounds.getWidth());
+        double height = Math.min(stage.getScene().getHeight(), bounds.getHeight());
+
+        stage.setWidth(width);
+        stage.setHeight(height);
+        stage.setX(bounds.getMinX() + (bounds.getWidth() - width) / 2);
+        stage.setY(bounds.getMinY() + (bounds.getHeight() - height) / 2);
+
         stage.show();
-        stage.centerOnScreen();
     }
 }
