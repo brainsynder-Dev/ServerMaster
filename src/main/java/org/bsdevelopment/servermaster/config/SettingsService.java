@@ -25,7 +25,7 @@ public final class SettingsService {
                 setDefault("server-port", 25565);
 
                 setDefault("java-path", resolveDefaultJavaPath());
-                setDefault("skip-startup-window", false);
+                setDefault("check-for-updates", true);
                 setDefault("force-stop-default", false);
                 setDefault("quick-restart-default", false);
 
@@ -52,7 +52,7 @@ public final class SettingsService {
         settings.setAppConfigVersion(configVersion);
         settings.setMemory(memory);
         settings.setPort(port);
-        settings.setSkipStartupWindow(file.getBoolean("skip-startup-window", false));
+        settings.setCheckForUpdates(file.getBoolean("check-for-updates", true));
         settings.setForceStopDefault(file.getBoolean("force-stop-default", false));
         settings.setQuickRestartDefault(file.getBoolean("quick-restart-default", false));
 
@@ -82,7 +82,7 @@ public final class SettingsService {
         file.set("dedicated-ram", settings.getMemory());
         file.set("server-path", settings.getServerPath() != null ? settings.getServerPath().toString() : "");
         file.set("server-port", settings.getPort());
-        file.set("skip-startup-window", settings.isSkipStartupWindow());
+        file.set("check-for-updates", settings.isCheckForUpdates());
         file.set("force-stop-default", settings.isForceStopDefault());
         file.set("quick-restart-default", settings.isQuickRestartDefault());
         file.set("java-path", settings.getJavaPath() != null ? settings.getJavaPath().toString() : resolveDefaultJavaPath());

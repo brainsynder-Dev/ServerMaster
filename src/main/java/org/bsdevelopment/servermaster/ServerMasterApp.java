@@ -96,19 +96,21 @@ public class ServerMasterApp extends Application {
 
         if (!Constants.DEV_MODE) new Thread(() -> new ViaJenkinsPluginUpdater().runOnStartup(), "servermaster-via-updater").start();
 
-        new Thread(() -> {
-            String currentVersion = ServerMasterApp.class.getPackage().getImplementationVersion();
-            new GitHubUpdateChecker().checkForUpdate(currentVersion).ifPresent(release ->
-                Platform.runLater(() -> {
-                    AppUpdater updater = new AppUpdater();
-                    new UpdateFoundWindow(
-                            release.version(),
-                            () -> new Thread(() -> updater.downloadAndRestart(release.jarDownloadUrl()), "servermaster-updater").start(),
-                            () -> {}
-                    ).show();
-                })
-            );
-        }, "servermaster-update-check").start();
+        if (SettingsService.get().isCheckForUpdates()) {
+            new Thread(() -> {
+                String currentVersion = ServerMasterApp.class.getPackage().getImplementationVersion();
+                new GitHubUpdateChecker().checkForUpdate(currentVersion).ifPresent(release ->
+                    Platform.runLater(() -> {
+                        AppUpdater updater = new AppUpdater();
+                        new UpdateFoundWindow(
+                                release.version(),
+                                () -> new Thread(() -> updater.downloadAndRestart(release.jarDownloadUrl()), "servermaster-updater").start(),
+                                () -> {}
+                        ).show();
+                    })
+                );
+            }, "servermaster-update-check").start();
+        }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stopBuildToolsIfRunning();

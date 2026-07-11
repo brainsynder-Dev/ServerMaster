@@ -93,11 +93,11 @@ public final class SettingsDialog {
 
         var port = new TextField(String.valueOf(settings.getPort()));
         port.setPrefColumnCount(6);
-        var skipStartup = new CheckBox("Skip startup window");
-        skipStartup.setSelected(settings.isSkipStartupWindow());
-        skipStartup.setOnAction(e -> SettingsService.get().setSkipStartupWindow(skipStartup.isSelected()));
+        var checkUpdates = new CheckBox("Check for updates on startup");
+        checkUpdates.setSelected(settings.isCheckForUpdates());
+        checkUpdates.setOnAction(e -> SettingsService.get().setCheckForUpdates(checkUpdates.isSelected()));
 
-        var portRow = new HBox(10, skipStartup, spacer(), new Label("Port"), port);
+        var portRow = new HBox(10, checkUpdates, spacer(), new Label("Port"), port);
         portRow.setAlignment(Pos.CENTER_LEFT);
 
         var serverSection = section("Server",

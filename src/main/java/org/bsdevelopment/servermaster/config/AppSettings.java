@@ -18,7 +18,7 @@ public class AppSettings {
     private Path serverPath;
     private Path javaPath;
 
-    private boolean skipStartupWindow = false;
+    private boolean checkForUpdates = true;
 
     private boolean forceStopDefault = false;
     private boolean quickRestartDefault = false;
