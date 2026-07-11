@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "org.bsdevelopment.servermaster"
-version = "1.6.9"
+version = "1.6.10"
 
 repositories {
     mavenCentral()
