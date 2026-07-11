@@ -1,0 +1,343 @@
+/* ============================================================
+   ServerMaster — futuristic dark theme
+   Overrides AtlantaFX (Nord) design tokens with a deep, cool
+   palette and an electric-cyan accent. Loaded last so it wins.
+   ============================================================ */
+
+.root {
+    /* Surfaces */
+    -color-bg-default: #0B0E14;
+    -color-bg-overlay:  #141A26;
+    -color-bg-subtle:   #10151F;
+    -color-bg-inset:    #070910;
+
+    /* Foreground */
+    -color-fg-default:  #E5EBF4;
+    -color-fg-muted:    #98A6BD;
+    -color-fg-subtle:   #6A7688;
+    -color-fg-emphasis: #FFFFFF;
+
+    /* Borders */
+    -color-border-default: #222C3C;
+    -color-border-muted:   #19212E;
+    -color-border-subtle:  rgba(255, 255, 255, 0.06);
+
+    /* Accent — electric cyan */
+    -color-accent-fg:       #45E3FF;
+    -color-accent-emphasis: #23B7E5;
+    -color-accent-muted:    rgba(37, 190, 232, 0.45);
+    -color-accent-subtle:   rgba(37, 190, 232, 0.14);
+
+    /* Semantic accents, tuned brighter for a neon feel */
+    -color-success-fg:       #46E6A0;
+    -color-success-emphasis: #21C27C;
+    -color-success-muted:    rgba(33, 194, 124, 0.45);
+    -color-success-subtle:   rgba(33, 194, 124, 0.14);
+
+    -color-danger-fg:       #FF6B7B;
+    -color-danger-emphasis: #F0384C;
+    -color-danger-muted:    rgba(240, 56, 76, 0.45);
+    -color-danger-subtle:   rgba(240, 56, 76, 0.14);
+
+    -color-warning-fg:       #FFC663;
+    -color-warning-emphasis: #E9A21C;
+    -color-warning-muted:    rgba(233, 162, 28, 0.45);
+    -color-warning-subtle:   rgba(233, 162, 28, 0.14);
+
+    -fx-font-family: "Inter", "Segoe UI", "SF Pro Display", "Helvetica Neue", sans-serif;
+}
+
+/* ---------------------------------------------------------------
+   Window shell
+   --------------------------------------------------------------- */
+.window-surface {
+    -fx-background-color:
+        radial-gradient(focus-angle 145deg, focus-distance 0%, center 8% 0%, radius 120%,
+            rgba(37, 190, 232, 0.10) 0%, transparent 55%),
+        linear-gradient(to bottom right, #0C1019 0%, #0B0E14 45%, #090C12 100%);
+    -fx-border-color: rgba(69, 227, 255, 0.16);
+    -fx-border-width: 1px;
+}
+
+.window-surface.dialog {
+    -fx-background-color:
+        radial-gradient(focus-angle 145deg, focus-distance 0%, center 12% 0%, radius 130%,
+            rgba(37, 190, 232, 0.08) 0%, transparent 60%),
+        linear-gradient(to bottom right, #111726 0%, #0E131E 100%);
+}
+
+/* ---------------------------------------------------------------
+   Top bar — title, tabs and window controls
+   --------------------------------------------------------------- */
+.top-bar {
+    -fx-background-color: linear-gradient(to bottom, #10151F 0%, #0C1017 100%);
+    -fx-border-color: transparent transparent rgba(69, 227, 255, 0.14) transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.app-title {
+    -fx-font-size: 19px;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, #9BF0FF 0%, #45E3FF 45%, #23B7E5 100%);
+    -fx-effect: dropshadow(gaussian, rgba(69, 227, 255, 0.45), 14, 0.0, 0, 0);
+}
+
+/* ---------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------- */
+.button,
+.toggle-button,
+.split-menu-button {
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-cursor: hand;
+}
+
+.button:hover,
+.toggle-button:hover,
+.split-menu-button:hover {
+    -fx-background-color: -color-accent-subtle;
+}
+
+.button.accent,
+.toggle-button.accent:selected,
+.split-menu-button.accent {
+    -fx-effect: dropshadow(gaussian, rgba(37, 190, 232, 0.35), 12, 0.0, 0, 2);
+}
+
+.button.accent:hover {
+    -fx-effect: dropshadow(gaussian, rgba(69, 227, 255, 0.55), 18, 0.0, 0, 2);
+}
+
+.hero-button {
+    -fx-font-weight: 700;
+    -fx-padding: 10 14 10 14;
+}
+
+.button.danger:hover  { -fx-effect: dropshadow(gaussian, rgba(240, 56, 76, 0.50), 16, 0.0, 0, 2); }
+.button.warning:hover { -fx-effect: dropshadow(gaussian, rgba(233, 162, 28, 0.50), 16, 0.0, 0, 2); }
+.split-menu-button.danger  { -fx-effect: dropshadow(gaussian, rgba(240, 56, 76, 0.28), 12, 0.0, 0, 2); }
+.split-menu-button.warning { -fx-effect: dropshadow(gaussian, rgba(233, 162, 28, 0.28), 12, 0.0, 0, 2); }
+
+/* ---------------------------------------------------------------
+   Inputs — combo boxes and text fields
+   --------------------------------------------------------------- */
+.combo-box,
+.text-field,
+.text-input {
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+}
+
+.combo-box:focused,
+.text-field:focused,
+.text-input:focused {
+    -fx-border-color: -color-accent-emphasis;
+    -fx-effect: dropshadow(gaussian, rgba(37, 190, 232, 0.30), 10, 0.0, 0, 0);
+}
+
+.combo-box .list-cell:filled:selected,
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: -color-accent-subtle;
+    -fx-text-fill: -color-accent-fg;
+}
+
+/* Connected command field + send button (AtlantaFX InputGroup) —
+   flatten the touching inner corners so they read as one control. */
+.input-group > .text-field,
+.input-group > .text-input {
+    -fx-background-radius: 9 0 0 9;
+    -fx-border-radius: 9 0 0 9;
+}
+
+.input-group > .button {
+    -fx-background-radius: 0 9 9 0;
+    -fx-border-radius: 0 9 9 0;
+    -fx-border-width: 1 1 1 0;
+}
+
+/* ---------------------------------------------------------------
+   Separators, scroll bars, menus
+   --------------------------------------------------------------- */
+.separator .line {
+    -fx-border-color: linear-gradient(to right, transparent, rgba(69, 227, 255, 0.28), transparent);
+    -fx-border-width: 1 0 0 0;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: rgba(120, 140, 170, 0.30);
+    -fx-background-radius: 6;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: -color-accent-muted;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.context-menu,
+.combo-box-popup .list-view {
+    -fx-background-color: -color-bg-overlay;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-border-color: rgba(69, 227, 255, 0.18);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.55), 22, 0.0, 0, 8);
+}
+
+.context-menu {
+    -fx-padding: 4;
+}
+
+.context-menu .menu-item {
+    -fx-background-radius: 7;
+    -fx-padding: 6 12 6 12;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: -color-fg-default;
+}
+
+.context-menu .menu-item:focused,
+.context-menu .menu-item:hovered {
+    -fx-background-color: -color-accent-subtle;
+}
+
+.context-menu .menu-item:focused .label,
+.context-menu .menu-item:hovered .label {
+    -fx-text-fill: -color-accent-fg;
+}
+
+.tooltip {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: rgba(69, 227, 255, 0.18);
+}
+
+/* ---------------------------------------------------------------
+   Tabbed navigation + dashboard card
+   --------------------------------------------------------------- */
+.nav-tab {
+    -fx-padding: 5 18 5 18;
+    -fx-font-weight: 600;
+    -fx-text-fill: -color-fg-muted;
+    -fx-background-color: -color-bg-inset;
+    -fx-cursor: hand;
+}
+
+.nav-tab:hover {
+    -fx-text-fill: -color-fg-default;
+}
+
+.nav-tab:selected {
+    -fx-background-color: -color-accent-subtle;
+    -fx-text-fill: -color-accent-fg;
+}
+
+.status-card {
+    -fx-background-color: linear-gradient(to bottom right, #121826 0%, #0E131E 100%);
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: rgba(69, 227, 255, 0.18);
+    -fx-border-width: 1;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 30, 0.0, 0, 12);
+}
+
+.status-pill {
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+}
+
+.status-pill.running {
+    -fx-background-color: -color-success-subtle;
+    -fx-text-fill: -color-success-fg;
+    -fx-border-color: -color-success-muted;
+}
+
+.status-pill.stopped {
+    -fx-background-color: rgba(150, 165, 190, 0.12);
+    -fx-text-fill: -color-fg-muted;
+    -fx-border-color: rgba(150, 165, 190, 0.25);
+}
+
+.card-summary {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -color-fg-default;
+}
+
+.card-muted {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-subtle;
+}
+
+/* ---------------------------------------------------------------
+   Settings dialog — sectioned cards
+   --------------------------------------------------------------- */
+.settings-card {
+    -fx-background-color: rgba(255, 255, 255, 0.02);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: rgba(69, 227, 255, 0.10);
+    -fx-border-width: 1;
+    -fx-padding: 14 16 16 16;
+}
+
+.settings-section {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -color-accent-fg;
+    -fx-padding: 0 0 2 0;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ---------------------------------------------------------------
+   Server-type logo tiles (installer)
+   --------------------------------------------------------------- */
+.logo-tile {
+    -fx-background-color: linear-gradient(to bottom, #E9EDF3 0%, #D5DCE7 100%);
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: rgba(69, 227, 255, 0.12);
+    -fx-border-width: 1.5;
+    -fx-padding: 10;
+    -fx-cursor: hand;
+}
+
+.logo-tile:hover {
+    -fx-background-color: linear-gradient(to bottom, #F2F5F9 0%, #E1E7EF 100%);
+    -fx-border-color: rgba(69, 227, 255, 0.45);
+}
+
+.logo-tile:selected {
+    -fx-background-color: linear-gradient(to bottom, #EAF6FB 0%, #D4E9F3 100%);
+    -fx-border-color: -color-accent-emphasis;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(37, 190, 232, 0.50), 16, 0.0, 0, 0);
+}
+
+.logo-tile-name {
+    -fx-background-color: rgba(9, 12, 18, 0.86);
+    -fx-background-radius: 8;
+    -fx-text-fill: #EAF6FF;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-padding: 3 9 3 9;
+}

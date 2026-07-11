@@ -19,6 +19,7 @@ public class FX {
     public static void addStyleSheet (Scene scene) {
         scene.getStylesheets().add("/css/console.css");
         scene.getStylesheets().add("/css/outline.css");
+        scene.getStylesheets().add("/css/theme.css");
     }
 
     public static InputGroup inputGroup (Node... nodes) {

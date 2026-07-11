@@ -4,9 +4,7 @@ import atlantafx.base.theme.NordDark;
 import fr.brouillard.oss.cssfx.CSSFX;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.*;
 import javafx.collections.ListChangeListener;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -34,6 +32,9 @@ public class ServerMasterApp extends Application {
     private static ServerWrapper serverWrapper;
 
     private static final BooleanProperty APPLICATION_LOCKED = new SimpleBooleanProperty(false);
+    private static final BooleanProperty INSTALL_ACTIVE = new SimpleBooleanProperty(false);
+    private static final DoubleProperty INSTALL_PROGRESS = new SimpleDoubleProperty(0);
+    private static Runnable consoleFocusHandler = () -> {};
 
     private static final Object BUILDTOOLS_LOCK = new Object();
     private static volatile Process buildToolsProcess;
@@ -123,6 +124,43 @@ public class ServerMasterApp extends Application {
 
     public static void unlockApplication() {
         APPLICATION_LOCKED.set(false);
+    }
+
+    public static ReadOnlyBooleanProperty installActiveProperty() {
+        return INSTALL_ACTIVE;
+    }
+
+    public static DoubleProperty installProgressProperty() {
+        return INSTALL_PROGRESS;
+    }
+
+    public static void beginInstall(boolean indeterminate) {
+        Platform.runLater(() -> {
+            INSTALL_PROGRESS.set(indeterminate ? -1 : 0);
+            INSTALL_ACTIVE.set(true);
+            APPLICATION_LOCKED.set(true);
+        });
+    }
+
+    public static void reportInstallProgress(double value) {
+        if (Platform.isFxApplicationThread()) INSTALL_PROGRESS.set(value);
+        else Platform.runLater(() -> INSTALL_PROGRESS.set(value));
+    }
+
+    public static void endInstall() {
+        Platform.runLater(() -> {
+            INSTALL_ACTIVE.set(false);
+            INSTALL_PROGRESS.set(0);
+            APPLICATION_LOCKED.set(false);
+        });
+    }
+
+    public static void setConsoleFocusHandler(Runnable handler) {
+        consoleFocusHandler = handler != null ? handler : () -> {};
+    }
+
+    public static void focusConsole() {
+        Platform.runLater(consoleFocusHandler);
     }
 
     public static void registerBuildToolsProcess(Process process) {

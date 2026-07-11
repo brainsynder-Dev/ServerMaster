@@ -6,15 +6,18 @@
 /* The CodeArea node */
 .log-viewer .log-cell {
     -fx-background-color: transparent;
-    -fx-border-color: #2E3440;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
+    -fx-border-color: rgba(69, 227, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.45), 18, 0.0, 0, 2);
 }
 
 /* RichTextFX internals that are usually the "white" you see */
 .log-viewer .log-cell .virtual-flow,
 .log-viewer .log-cell .content {
-    -fx-background-color: -color-bg-default; /* or transparent if you want container to show through */
+    -fx-background-color: -color-bg-inset;
+    -fx-background-radius: 12;
 }
 
 /* Often helpful to keep paragraph backgrounds from painting */
@@ -49,4 +52,28 @@
     -fx-fill: #eaad19;
     -fx-font-weight: bold;
 }
+
+/* Minecraft chat color codes (§/& 0-f) */
+.mc-0 { -fx-fill: #000000; }
+.mc-1 { -fx-fill: #0000AA; }
+.mc-2 { -fx-fill: #00AA00; }
+.mc-3 { -fx-fill: #00AAAA; }
+.mc-4 { -fx-fill: #AA0000; }
+.mc-5 { -fx-fill: #AA00AA; }
+.mc-6 { -fx-fill: #FFAA00; }
+.mc-7 { -fx-fill: #AAAAAA; }
+.mc-8 { -fx-fill: #555555; }
+.mc-9 { -fx-fill: #5555FF; }
+.mc-a { -fx-fill: #55FF55; }
+.mc-b { -fx-fill: #55FFFF; }
+.mc-c { -fx-fill: #FF5555; }
+.mc-d { -fx-fill: #FF55FF; }
+.mc-e { -fx-fill: #FFFF55; }
+.mc-f { -fx-fill: #FFFFFF; }
+
+/* Minecraft formatting codes (§/& l m n o) — k (obfuscated) is skipped */
+.mc-bold      { -fx-font-weight: bold; }
+.mc-italic    { -fx-font-style: italic; }
+.mc-underline { -fx-underline: true; }
+.mc-strike    { -fx-strikethrough: true; }
 

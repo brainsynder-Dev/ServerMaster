@@ -18,6 +18,7 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.bsdevelopment.servermaster.LogViewer;
 import org.bsdevelopment.servermaster.ServerMasterApp;
+import org.bsdevelopment.servermaster.components.ConfigEditorPane;
 import org.bsdevelopment.servermaster.components.ServerSelection;
 import org.bsdevelopment.servermaster.components.ServerSelectionPane;
 import org.bsdevelopment.servermaster.components.TopBar;
@@ -34,13 +35,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class MainWindow {
-    private static final double SIDEBAR_WIDTH = 280;
     private final Stage stage;
     private final LogViewer console;
     private final BooleanProperty serverRunning = new SimpleBooleanProperty(false);
-    private ServerSelectionPane serverSelection;
+
+    private final ServerSelectionPane serverSelection;
     private SplitMenuButton stopButton;
     private SplitMenuButton restartButton;
+    private final Region dashboardView;
+    private final Region consoleView;
+    private final ConfigEditorPane configView;
+    private ToggleButton consoleTab;
+    private Label metaLabel;
     private volatile boolean restartPending;
     private int historyIndex = -1;
     private String historyDraft = "";
@@ -55,24 +61,34 @@ public final class MainWindow {
         console = new LogViewer();
         LogViewer.registerActive(console);
 
-        var content = new BorderPane();
-        content.setPadding(Insets.EMPTY);
-        content.setMinHeight(0);
-
+        ServerOutputListener outputListener = (server, stream, line) -> Platform.runLater(() -> console.appendLine(line));
         try {
-            content.setLeft(buildSidebar(selection));
+            serverSelection = new ServerSelectionPane(selection, serverRunning, outputListener, () -> {
+                console.clearConsole();
+                console.appendSystemMessage("Starting server...");
+                if (consoleTab != null) consoleTab.setSelected(true);
+            });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        content.setCenter(buildConsolePane());
 
-        var topBar = new TopBar(stage, SIDEBAR_WIDTH, () -> console.appendSystemMessage("Closing the application in 5 seconds..."));
+        dashboardView = buildDashboard();
+        consoleView = buildConsole();
+        configView = new ConfigEditorPane();
+
+        var contentStack = new StackPane(dashboardView, consoleView, configView);
+        contentStack.setMinHeight(0);
+
+        var topBar = new TopBar(stage, buildTabs(), () -> console.appendSystemMessage("Closing the application in 5 seconds..."));
+        ServerMasterApp.setConsoleFocusHandler(() -> {
+            if (consoleTab != null) consoleTab.setSelected(true);
+        });
 
         var surface = new WindowSurface();
         surface.setTop(topBar);
-        surface.setCenter(content);
+        surface.setCenter(contentStack);
 
-        var scene = new Scene(surface, 1280, 720);
+        var scene = new Scene(surface, 1280, 820);
         scene.setFill(Color.TRANSPARENT);
         FX.addStyleSheet(scene);
         stage.setScene(scene);
@@ -83,28 +99,75 @@ public final class MainWindow {
         });
     }
 
-    private Region buildSidebar(ServerSelection selection) throws IOException {
-        var header = new Label("ServerMaster");
-        header.getStyleClass().addAll(Styles.TITLE_3);
+    private Region buildTabs() {
+        var group = new ToggleGroup();
 
-        String rawVersion = MainWindow.class.getPackage().getImplementationVersion();
-        var versionLabel = new Label(rawVersion != null ? "v" + rawVersion : "Development Build");
-        versionLabel.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+        var dashboardTab = new ToggleButton("Dashboard");
+        dashboardTab.getStyleClass().addAll(Styles.LEFT_PILL, "nav-tab");
+        dashboardTab.setToggleGroup(group);
+        dashboardTab.setUserData(dashboardView);
 
-        var titleBox = new VBox(2, header, versionLabel);
-        titleBox.setAlignment(Pos.CENTER);
+        consoleTab = new ToggleButton("Console");
+        consoleTab.getStyleClass().addAll(Styles.CENTER_PILL, "nav-tab");
+        consoleTab.setToggleGroup(group);
+        consoleTab.setUserData(consoleView);
 
-        ServerOutputListener outputListener = (server, stream, line) -> Platform.runLater(() -> console.appendLine(line));
-        serverSelection = new ServerSelectionPane(selection, serverRunning, outputListener,
-                () -> {
-                    console.clearConsole();
-                    console.appendSystemMessage("Starting server...");
-                }
-        );
+        var configTab = new ToggleButton("Config");
+        configTab.getStyleClass().addAll(Styles.RIGHT_PILL, "nav-tab");
+        configTab.setToggleGroup(group);
+        configTab.setUserData(configView);
+
+        group.selectedToggleProperty().addListener((obs, previous, selected) -> {
+            if (selected == null) {
+                previous.setSelected(true);
+                return;
+            }
+            showView((Region) selected.getUserData());
+        });
+
+        if (serverRunning.get()) consoleTab.setSelected(true);
+        else dashboardTab.setSelected(true);
+
+        var tabs = new HBox(dashboardTab, consoleTab, configTab);
+        tabs.setAlignment(Pos.CENTER_LEFT);
+        return tabs;
+    }
+
+    private void showView(Region target) {
+        if (target == dashboardView) refreshDashboardMeta();
+        if (target == configView) configView.refresh();
+
+        for (Region view : List.of(dashboardView, consoleView, configView)) {
+            boolean active = view == target;
+            view.setVisible(active);
+            view.setManaged(active);
+        }
+    }
+
+    private Region buildDashboard() {
+        var statusPill = new Label();
+        statusPill.getStyleClass().add("status-pill");
+        statusPill.setMaxWidth(Region.USE_PREF_SIZE);
+        updateStatusPill(statusPill, serverRunning.get());
+        serverRunning.addListener((obs, was, running) -> updateStatusPill(statusPill, running));
+
+        var summary = new Label();
+        summary.getStyleClass().add("card-summary");
+        summary.textProperty().bind(serverSelection.summaryProperty());
+
+        metaLabel = new Label();
+        metaLabel.getStyleClass().add("card-muted");
+        refreshDashboardMeta();
+
+        var card = new VBox(14, statusPill, summary, metaLabel, new Separator(), serverSelection);
+        card.getStyleClass().add("status-card");
+        card.setMaxWidth(480);
+        card.setFillWidth(true);
 
         var locked = ServerMasterApp.applicationLockedProperty();
+
         var installer = new Button("Server Installer");
-        installer.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
+        installer.getStyleClass().add(Styles.BUTTON_OUTLINED);
         installer.setMaxWidth(Double.MAX_VALUE);
         installer.disableProperty().bind(serverRunning.or(locked));
         installer.setOnAction(e -> {
@@ -114,27 +177,42 @@ public final class MainWindow {
                 throw new RuntimeException(ex);
             }
         });
+        HBox.setHgrow(installer, Priority.ALWAYS);
 
         var settings = new Button("Settings");
-        settings.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
+        settings.getStyleClass().add(Styles.BUTTON_OUTLINED);
         settings.setMaxWidth(Double.MAX_VALUE);
         settings.disableProperty().bind(serverRunning.or(locked));
         settings.setOnAction(e -> new SettingsDialog(stage).show());
+        HBox.setHgrow(settings, Priority.ALWAYS);
 
-        var spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
+        var actions = new HBox(12, installer, settings);
+        actions.setMaxWidth(480);
+        actions.setAlignment(Pos.CENTER);
 
-        var box = new VBox(10, titleBox, serverSelection, new Separator(), spacer, installer, settings);
-        box.setPadding(new Insets(14));
-        box.setPrefWidth(280);
-        box.setAlignment(Pos.TOP_CENTER);
-        box.getStyleClass().addAll(Styles.BG_SUBTLE);
-        box.setMaxHeight(Double.MAX_VALUE);
+        var column = new VBox(16, card, actions);
+        column.setAlignment(Pos.CENTER);
+        column.setMaxWidth(480);
 
-        return box;
+        var wrapper = new StackPane(column);
+        wrapper.setAlignment(Pos.CENTER);
+        wrapper.setPadding(new Insets(28));
+        return wrapper;
     }
 
-    private Region buildConsolePane() {
+    private void updateStatusPill(Label pill, boolean running) {
+        pill.getStyleClass().removeAll("running", "stopped");
+        pill.setText(running ? "●  RUNNING" : "●  STOPPED");
+        pill.getStyleClass().add(running ? "running" : "stopped");
+    }
+
+    private void refreshDashboardMeta() {
+        if (metaLabel == null) return;
+        var settings = SettingsService.get();
+        metaLabel.setText(settings.getMemory() + " GB RAM     ·     port " + settings.getPort());
+    }
+
+    private Region buildConsole() {
         var topButtons = new HBox(10);
         topButtons.setAlignment(Pos.CENTER_LEFT);
 
@@ -159,7 +237,20 @@ public final class MainWindow {
 
         topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, restartButton, stopButton);
 
-        var consoleBox = new VBox(10, topButtons, console);
+        var installLabel = new Label("Installing…");
+        installLabel.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+
+        var installBar = new ProgressBar();
+        installBar.setMaxWidth(Double.MAX_VALUE);
+        installBar.progressProperty().bind(ServerMasterApp.installProgressProperty());
+        HBox.setHgrow(installBar, Priority.ALWAYS);
+
+        var installRow = new HBox(10, installLabel, installBar);
+        installRow.setAlignment(Pos.CENTER_LEFT);
+        installRow.visibleProperty().bind(ServerMasterApp.installActiveProperty());
+        installRow.managedProperty().bind(installRow.visibleProperty());
+
+        var consoleBox = new VBox(10, topButtons, installRow, console);
         consoleBox.setPadding(new Insets(14));
         consoleBox.setMinHeight(0);
         VBox.setVgrow(console, Priority.ALWAYS);

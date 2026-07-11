@@ -5,16 +5,8 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
@@ -22,15 +14,19 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.bsdevelopment.servermaster.Constants;
 import org.bsdevelopment.servermaster.ServerMasterApp;
+import org.bsdevelopment.servermaster.config.AppSettings;
 import org.bsdevelopment.servermaster.config.SettingsService;
 import org.bsdevelopment.servermaster.instance.InstanceCatalog;
 import org.bsdevelopment.servermaster.ui.window.WindowButtons;
 import org.bsdevelopment.servermaster.ui.window.WindowSurface;
 import org.bsdevelopment.servermaster.utils.AdvString;
+import org.bsdevelopment.servermaster.utils.BuildToolsArtifacts;
 import org.bsdevelopment.servermaster.utils.FX;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class SettingsDialog {
     private final Stage stage;
@@ -40,6 +36,7 @@ public final class SettingsDialog {
     public SettingsDialog(Stage owner) {
         this(owner, null, false);
     }
+
     public SettingsDialog(Stage owner, Runnable onSaved, boolean required) {
         this.onSaved = onSaved;
         this.required = required;
@@ -50,103 +47,176 @@ public final class SettingsDialog {
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.setTitle("ServerMaster Settings");
 
-        var title = new Label("ServerMaster Settings");
+        AppSettings settings = SettingsService.get();
+
+        var title = new Label("Settings");
         title.getStyleClass().addAll(Styles.TITLE_3);
 
-        Path serverPath = SettingsService.get().getServerPath();
-        boolean blank = false;
-        if (serverPath == null) {
-            blank = true;
-            serverPath = Constants.WORKING_PATH;
-        }
+        // --- Server section ---------------------------------------------------
+        Path serverPath = settings.getServerPath();
+        boolean blank = serverPath == null;
+        if (blank) serverPath = Constants.WORKING_PATH;
 
         String path = serverPath.toAbsolutePath().toString();
         if (blank) path = AdvString.beforeLast("\\.", path);
 
         var serverFolder = new TextField(path);
         serverFolder.setDisable(true);
+        HBox.setHgrow(serverFolder, Priority.ALWAYS);
+
         var browse = new Button("📁");
         browse.getStyleClass().addAll(Styles.BUTTON_OUTLINED);
-        browse.setOnAction(actionEvent -> {
-            DirectoryChooser dc = new DirectoryChooser();
-            dc.setTitle("Select Server Folder");
-            File dir = dc.showDialog(stage.getOwner());
+        browse.setOnAction(e -> {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Select Server Folder");
+            File dir = chooser.showDialog(stage.getOwner());
             if (dir != null) {
-                String selectedPath = dir.getAbsolutePath();
-                serverFolder.setText(selectedPath);
+                serverFolder.setText(dir.getAbsolutePath());
                 SettingsService.get().setServerPath(dir.toPath());
             }
         });
 
-        var folderRow = new HBox(8, FX.inputGroup(serverFolder, browse));
-        HBox.setHgrow(serverFolder, Priority.ALWAYS);
+        var folderRow = new HBox(FX.inputGroup(serverFolder, browse));
 
-        long initialRamGb = SettingsService.get().getMemory();
-        if (initialRamGb < 1) initialRamGb = 1;
-        if (initialRamGb > Constants.MAX_GB) initialRamGb = Constants.MAX_GB;
-
-        var ramLabel = rowLabel("Server Ram (" + initialRamGb + " GB)");
-        var ram = new Slider(1, Constants.MAX_GB, initialRamGb);
+        long initialRam = clampRam(settings.getMemory());
+        var ramLabel = fieldLabel("Dedicated RAM — " + initialRam + " GB");
+        var ram = new Slider(1, Constants.MAX_GB, initialRam);
         ram.setMajorTickUnit(4);
         ram.setBlockIncrement(1);
         ram.setMinorTickCount(3);
         ram.setShowTickMarks(true);
         ram.setShowTickLabels(true);
         ram.setSnapToTicks(true);
-
         ram.valueProperty().addListener((obs, oldV, newV) -> {
             int gb = (int) Math.round(newV.doubleValue());
-            ramLabel.setText("Server Ram (" + gb + " GB)");
+            ramLabel.setText("Dedicated RAM — " + gb + " GB");
             SettingsService.get().setMemory(gb);
         });
 
-        var skipStartupWindow = new CheckBox("Skip Startup Window");
-        skipStartupWindow.setSelected(SettingsService.get().isSkipStartupWindow());
-        skipStartupWindow.setOnAction(e -> SettingsService.get().setSkipStartupWindow(skipStartupWindow.isSelected()));
-
-        var port = new TextField(String.valueOf(SettingsService.get().getPort()));
+        var port = new TextField(String.valueOf(settings.getPort()));
         port.setPrefColumnCount(6);
+        var skipStartup = new CheckBox("Skip startup window");
+        skipStartup.setSelected(settings.isSkipStartupWindow());
+        skipStartup.setOnAction(e -> SettingsService.get().setSkipStartupWindow(skipStartup.isSelected()));
 
-        var portRow = new HBox(8, skipStartupWindow, spacer(), new Label("Port Number"), port);
+        var portRow = new HBox(10, skipStartup, spacer(), new Label("Port"), port);
         portRow.setAlignment(Pos.CENTER_LEFT);
 
-        var javaPath = new TextField((SettingsService.get().getJavaPath() == null)
+        var serverSection = section("Server",
+                fieldLabel("Server folder"), folderRow,
+                ramLabel, ram,
+                portRow);
+
+        // --- Java section -----------------------------------------------------
+        var javaPath = new TextField(settings.getJavaPath() == null
                 ? Constants.JAVA_MANAGER.getPrimaryInstallation().getJavaExecutable().getAbsolutePath()
-                : SettingsService.get().getJavaPath().toAbsolutePath().toString());
+                : settings.getJavaPath().toAbsolutePath().toString());
         javaPath.setDisable(true);
         HBox.setHgrow(javaPath, Priority.ALWAYS);
 
         var detect = new Button("Detect Java");
         detect.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
-        detect.setOnAction(e -> new JavaVersionDialog(stage, () -> {
-            javaPath.setText(SettingsService.get().getJavaPath().toAbsolutePath().toString());
-        }).show());
+        detect.setOnAction(e -> new JavaVersionDialog(stage,
+                () -> javaPath.setText(SettingsService.get().getJavaPath().toAbsolutePath().toString())).show());
 
-        var javaRow = new HBox(8, javaPath, detect);
+        var javaRow = new HBox(10, javaPath, detect);
+        javaRow.setAlignment(Pos.CENTER_LEFT);
 
+        var javaSection = section("Java", fieldLabel("Java executable"), javaRow);
+
+        // --- Developer section (hidden unless developer-mode is set) ----------
+        var mavenEnabled = new CheckBox("Deploy BuildTools jars to a Maven repository");
+        mavenEnabled.setSelected(settings.isMavenDeployEnabled());
+
+        var repoUrl = new TextField(settings.getMavenRepoUrl());
+        repoUrl.setPromptText("https://repo.example.com/repository/maven-releases/");
+        var repoId = new TextField(settings.getMavenRepoId());
+        repoId.setPromptText("repository id (matches your settings.xml server id)");
+        var username = new TextField(settings.getMavenUsername());
+        username.setPromptText("username");
+        var password = new PasswordField();
+        password.setText(settings.getMavenPassword());
+        password.setPromptText("password / token");
+
+        List<BuildToolsArtifacts.BuiltJar> builtJars = BuildToolsArtifacts.scan();
+
+        var jarBox = new VBox(6);
+        var jarChecks = new ArrayList<CheckBox>();
+        if (builtJars.isEmpty()) {
+            var empty = new Label("Run the Spigot installer once to compile the jars, then reopen Settings to choose which to upload.");
+            empty.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+            empty.setWrapText(true);
+            jarBox.getChildren().add(empty);
+        } else {
+            for (BuildToolsArtifacts.BuiltJar jar : builtJars) {
+                var check = new CheckBox(jar.displayName());
+                check.setSelected(settings.getMavenDeployArtifacts().contains(jar.deployKey()));
+                check.setUserData(jar.deployKey());
+                jarChecks.add(check);
+                jarBox.getChildren().add(check);
+            }
+        }
+
+        var mavenFields = new VBox(8,
+                fieldLabel("Repository URL"), repoUrl,
+                fieldLabel("Repository ID"), repoId,
+                fieldLabel("Username"), username,
+                fieldLabel("Password"), password,
+                fieldLabel("Jars to deploy"), jarBox);
+        mavenFields.disableProperty().bind(mavenEnabled.selectedProperty().not());
+
+        var developerSection = section("Developer — Maven Deploy", mavenEnabled, mavenFields);
+        developerSection.setVisible(settings.isDeveloperMode());
+        developerSection.setManaged(settings.isDeveloperMode());
+
+        // --- Save -------------------------------------------------------------
         var save = new Button("SAVE SETTINGS");
-        save.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
+        save.getStyleClass().addAll(Styles.ACCENT, "hero-button");
         save.setMaxWidth(Double.MAX_VALUE);
 
         final boolean[] saved = { false };
-
-        save.setOnAction(actionEvent -> {
+        save.setOnAction(e -> {
+            AppSettings current = SettingsService.get();
             try {
-                SettingsService.get().setPort(Integer.parseInt(port.getText().trim()));
+                current.setPort(Integer.parseInt(port.getText().trim()));
             } catch (NumberFormatException ignored) { }
-            SettingsService.get().setJavaPath(Path.of(javaPath.getText()));
-            SettingsService.save();
+            current.setJavaPath(Path.of(javaPath.getText()));
 
-            ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
+            current.setMavenDeployEnabled(mavenEnabled.isSelected());
+            current.setMavenRepoUrl(repoUrl.getText().trim());
+            current.setMavenRepoId(repoId.getText().trim());
+            current.setMavenUsername(username.getText().trim());
+            current.setMavenPassword(password.getText());
+
+            if (!builtJars.isEmpty()) {
+                var selectedJars = new ArrayList<String>();
+                for (CheckBox check : jarChecks) {
+                    if (check.isSelected()) selectedJars.add((String) check.getUserData());
+                }
+                current.setMavenDeployArtifacts(selectedJars);
+            }
+
+            SettingsService.save();
+            ServerMasterApp.instanceCatalog = new InstanceCatalog(current.getServerPath());
             saved[0] = true;
 
             stage.close();
             if (onSaved != null) onSaved.run();
         });
 
-        var content = new VBox(10, title, rowLabel("Server Folder"), folderRow, ramLabel, ram,
-                portRow, rowLabel("Java Executable Path"), javaRow, save);
-        content.setPadding(new Insets(10, 16, 16, 16));
+        var body = new VBox(18, title, serverSection, javaSection, developerSection);
+        body.setPadding(new Insets(4, 18, 8, 18));
+
+        var scroll = new ScrollPane(body);
+        scroll.setFitToWidth(true);
+        scroll.getStyleClass().add("edge-to-edge");
+        VBox.setVgrow(scroll, Priority.ALWAYS);
+
+        var saveBar = new VBox(save);
+        saveBar.setPadding(new Insets(8, 18, 16, 18));
+
+        var content = new VBox(scroll, saveBar);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
 
         var windowButtons = new WindowButtons(stage, false);
         windowButtons.setStyle("-fx-background-color: transparent;");
@@ -157,7 +227,7 @@ public final class SettingsDialog {
         surface.setCenter(content);
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 600, 420);
+        var scene = new Scene(surface, 620, 560);
         scene.setFill(Color.TRANSPARENT);
         FX.addStyleSheet(scene);
         stage.setScene(scene);
@@ -169,20 +239,37 @@ public final class SettingsDialog {
         }
     }
 
-    private static Region spacer() {
-        var r = new Region();
-        HBox.setHgrow(r, Priority.ALWAYS);
-        return r;
-    }
-
-    private static Label rowLabel(String text) {
-        var l = new Label(text);
-        l.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
-        return l;
-    }
-
     public void show() {
         stage.show();
         stage.centerOnScreen();
+    }
+
+    private static long clampRam(long ramGb) {
+        if (ramGb < 1) return 1;
+        if (ramGb > Constants.MAX_GB) return Constants.MAX_GB;
+        return ramGb;
+    }
+
+    private static VBox section(String heading, Region... rows) {
+        var header = new Label(heading);
+        header.getStyleClass().add("settings-section");
+        header.setMaxWidth(Double.MAX_VALUE);
+
+        var box = new VBox(8, header);
+        box.getChildren().addAll(rows);
+        box.getStyleClass().add("settings-card");
+        return box;
+    }
+
+    private static Region spacer() {
+        var region = new Region();
+        HBox.setHgrow(region, Priority.ALWAYS);
+        return region;
+    }
+
+    private static Label fieldLabel(String text) {
+        var label = new Label(text);
+        label.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+        return label;
     }
 }

@@ -3,39 +3,57 @@ package org.bsdevelopment.servermaster.components;
 import atlantafx.base.theme.Styles;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.bsdevelopment.servermaster.ui.window.WindowButtons;
 
 public final class TopBar extends HBox {
 
-    private final Region leftFill;
+    private double dragOffsetX;
+    private double dragOffsetY;
 
-    public TopBar(Stage stage, double sidebarWidth, Runnable onClose) {
-        setMinHeight(44);
-        setPrefHeight(44);
-        setMaxHeight(44);
+    public TopBar(Stage stage, Node tabs, Runnable onClose) {
+        setMinHeight(48);
+        setPrefHeight(48);
+        setMaxHeight(48);
+        setAlignment(Pos.CENTER_LEFT);
+        getStyleClass().add("top-bar");
 
-        leftFill = new Region();
-        leftFill.setPrefWidth(sidebarWidth);
-        leftFill.setMinWidth(sidebarWidth);
-        leftFill.setMaxWidth(sidebarWidth);
-        leftFill.getStyleClass().addAll(Styles.BG_SUBTLE);
+        var title = new Label("ServerMaster");
+        title.getStyleClass().add("app-title");
 
-        var stackPane = new StackPane(new WindowButtons(stage, true, onClose));
-        stackPane.setAlignment(Pos.TOP_RIGHT);
-        stackPane.setPadding(new Insets(6, 6, 0, 6));
-        HBox.setHgrow(stackPane, Priority.ALWAYS);
+        String rawVersion = TopBar.class.getPackage().getImplementationVersion();
+        var version = new Label(rawVersion != null ? "v" + rawVersion : "Development Build");
+        version.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
 
-        getChildren().addAll(leftFill, stackPane);
+        var branding = new HBox(8, title, version);
+        branding.setAlignment(Pos.CENTER_LEFT);
+        branding.setPadding(new Insets(0, 4, 0, 16));
+
+        var left = new HBox(18, branding, tabs);
+        left.setAlignment(Pos.CENTER_LEFT);
+
+        var spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        installDrag(stage, branding);
+        installDrag(stage, spacer);
+
+        getChildren().addAll(left, spacer, new WindowButtons(stage, true, onClose));
     }
 
-    public void setSidebarWidth(double width) {
-        leftFill.setPrefWidth(width);
-        leftFill.setMinWidth(width);
-        leftFill.setMaxWidth(width);
+    private void installDrag(Stage stage, Node handle) {
+        handle.setOnMousePressed(e -> {
+            dragOffsetX = e.getSceneX();
+            dragOffsetY = e.getSceneY();
+        });
+        handle.setOnMouseDragged(e -> {
+            stage.setX(e.getScreenX() - dragOffsetX);
+            stage.setY(e.getScreenY() - dragOffsetY);
+        });
     }
 }

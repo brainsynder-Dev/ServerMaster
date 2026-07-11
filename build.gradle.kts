@@ -60,6 +60,7 @@ dependencies {
     implementation("com.jeff-media:javafinder:1.4.4")
     implementation("com.github.oshi:oshi-core:6.9.3")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.0.1")
+    implementation("org.yaml:snakeyaml:2.2")
 }
 
 tasks.withType<JavaCompile> {

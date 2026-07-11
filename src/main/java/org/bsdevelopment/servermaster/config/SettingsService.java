@@ -29,6 +29,14 @@ public final class SettingsService {
                 setDefault("force-stop-default", false);
                 setDefault("quick-restart-default", false);
 
+                setDefault("developer-mode", false);
+                setDefault("maven-deploy-enabled", false);
+                setDefault("maven-repo-url", "");
+                setDefault("maven-repo-id", "");
+                setDefault("maven-username", "");
+                setDefault("maven-password", "");
+                setDefault("maven-deploy-artifacts", new JsonArray());
+
                 setDefault("recent-commands", new JsonArray());
             }
         };
@@ -47,6 +55,14 @@ public final class SettingsService {
         settings.setSkipStartupWindow(file.getBoolean("skip-startup-window", false));
         settings.setForceStopDefault(file.getBoolean("force-stop-default", false));
         settings.setQuickRestartDefault(file.getBoolean("quick-restart-default", false));
+
+        settings.setDeveloperMode(file.getBoolean("developer-mode", false));
+        settings.setMavenDeployEnabled(file.getBoolean("maven-deploy-enabled", false));
+        settings.setMavenRepoUrl(file.getString("maven-repo-url"));
+        settings.setMavenRepoId(file.getString("maven-repo-id"));
+        settings.setMavenUsername(file.getString("maven-username"));
+        settings.setMavenPassword(file.getString("maven-password"));
+        settings.setMavenDeployArtifacts(readStringArray("maven-deploy-artifacts"));
 
         if (!javaPath.isBlank()) {
             settings.setJavaPath(Path.of(javaPath));
@@ -70,6 +86,14 @@ public final class SettingsService {
         file.set("force-stop-default", settings.isForceStopDefault());
         file.set("quick-restart-default", settings.isQuickRestartDefault());
         file.set("java-path", settings.getJavaPath() != null ? settings.getJavaPath().toString() : resolveDefaultJavaPath());
+
+        file.set("developer-mode", settings.isDeveloperMode());
+        file.set("maven-deploy-enabled", settings.isMavenDeployEnabled());
+        file.set("maven-repo-url", settings.getMavenRepoUrl() != null ? settings.getMavenRepoUrl() : "");
+        file.set("maven-repo-id", settings.getMavenRepoId() != null ? settings.getMavenRepoId() : "");
+        file.set("maven-username", settings.getMavenUsername() != null ? settings.getMavenUsername() : "");
+        file.set("maven-password", settings.getMavenPassword() != null ? settings.getMavenPassword() : "");
+        file.set("maven-deploy-artifacts", writeStringArray(settings.getMavenDeployArtifacts()));
 
         file.set("recent-commands", writeRecentCommands(settings.getRecentCommands()));
 
@@ -116,6 +140,29 @@ public final class SettingsService {
         for (String cmd : commands) {
             if (cmd == null || cmd.isBlank()) continue;
             arr.add(cmd);
+        }
+        return arr;
+    }
+
+    private static List<String> readStringArray(String key) {
+        JsonValue value = file.getValue(key);
+        if (value == null || !value.isArray()) return new ArrayList<>();
+
+        List<String> list = new ArrayList<>();
+        for (JsonValue element : value.asArray()) {
+            if (element != null && element.isString() && !element.asString().isBlank()) {
+                list.add(element.asString());
+            }
+        }
+        return list;
+    }
+
+    private static JsonArray writeStringArray(List<String> values) {
+        JsonArray arr = new JsonArray();
+        if (values == null) return arr;
+
+        for (String value : values) {
+            if (value != null && !value.isBlank()) arr.add(value);
         }
         return arr;
     }

@@ -4,6 +4,8 @@ import atlantafx.base.theme.Styles;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -38,6 +40,7 @@ public final class ServerSelectionPane extends VBox {
     private final BooleanProperty versionEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty buildEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty startEnabled = new SimpleBooleanProperty(false);
+    private final ReadOnlyStringWrapper summary = new ReadOnlyStringWrapper("No server selected");
 
     public ServerSelectionPane(ServerSelection selection, BooleanProperty serverRunning, ServerOutputListener outputListener, Runnable onStart) throws IOException {
         this.selection = Objects.requireNonNull(selection, "selection");
@@ -54,7 +57,7 @@ public final class ServerSelectionPane extends VBox {
         build.setVisible(false);
 
         start = new Button("START SERVER");
-        start.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
+        start.getStyleClass().addAll(Styles.ACCENT, "hero-button");
         start.setMaxWidth(Double.MAX_VALUE);
 
         var locked = ServerMasterApp.applicationLockedProperty();
@@ -122,14 +125,28 @@ public final class ServerSelectionPane extends VBox {
 
         restoreSelectionFromModel();
 
-        type.valueProperty().addListener((obs, o, v) -> selection.setServerType(v == null ? "" : v));
-        version.valueProperty().addListener((obs, o, v) -> selection.setServerVersion(v == null ? "" : v));
-        build.valueProperty().addListener((obs, o, v) -> selection.setServerBuild(v == null ? "" : v));
+        type.valueProperty().addListener((obs, o, v) -> {
+            selection.setServerType(v == null ? "" : v);
+            updateSummary();
+        });
+        version.valueProperty().addListener((obs, o, v) -> {
+            selection.setServerVersion(v == null ? "" : v);
+            updateSummary();
+        });
+        build.valueProperty().addListener((obs, o, v) -> {
+            selection.setServerBuild(v == null ? "" : v);
+            updateSummary();
+        });
 
         getChildren().addAll(type, version, build, start);
         VBox.setVgrow(start, Priority.NEVER);
 
+        updateSummary();
         start.setOnAction(actionEvent -> startSelectedServer());
+    }
+
+    public ReadOnlyStringProperty summaryProperty() {
+        return summary.getReadOnlyProperty();
     }
 
     public void startSelectedServer() {
@@ -266,6 +283,28 @@ public final class ServerSelectionPane extends VBox {
                 }
             }
         }
+    }
+
+    private void updateSummary() {
+        String selectedType = type.getValue();
+        if (selectedType == null || selectedType.isBlank()) {
+            summary.set("No server selected");
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder(selectedType);
+
+        String selectedVersion = version.getValue();
+        if (selectedVersion != null && !selectedVersion.isBlank()) {
+            builder.append("  ·  ").append(selectedVersion);
+        }
+
+        String selectedBuild = build.isVisible() ? build.getValue() : null;
+        if (selectedBuild != null && !selectedBuild.isBlank()) {
+            builder.append("  ·  build ").append(selectedBuild);
+        }
+
+        summary.set(builder.toString());
     }
 
     private static ComboBox<String> combo(String prompt, List<String> items) {

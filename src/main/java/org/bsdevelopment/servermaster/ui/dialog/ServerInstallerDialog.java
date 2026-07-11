@@ -5,11 +5,12 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
@@ -23,6 +24,7 @@ import org.bsdevelopment.servermaster.instance.InstanceCatalog;
 import org.bsdevelopment.servermaster.ui.window.WindowButtons;
 import org.bsdevelopment.servermaster.ui.window.WindowSurface;
 import org.bsdevelopment.servermaster.utils.BackendApiService;
+import org.bsdevelopment.servermaster.utils.BuildToolsArtifacts;
 import org.bsdevelopment.servermaster.utils.FX;
 
 import java.io.BufferedInputStream;
@@ -51,8 +53,9 @@ public final class ServerInstallerDialog {
     private final BackendApiService API = new BackendApiService();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    private Button installBtn;
-    private final Label statusLabel;
+    private final Button installBtn;
+    private final Label infoNote;
+    private String selectedType;
     private List<BackendApiService.BuildInfo> currentBuilds = new ArrayList<>();
 
     public ServerInstallerDialog(Stage owner) throws IOException, InterruptedException {
@@ -66,109 +69,115 @@ public final class ServerInstallerDialog {
         windowButtons.setStyle("-fx-background-color: transparent;");
 
         var header = new Label("Server Installer");
-        header.getStyleClass().addAll(Styles.TITLE_3);
+        header.getStyleClass().add("app-title");
 
-        var type = blankCombo("Server Type");
-        type.setDisable(false);
-        type.getItems().addAll(API.fetchProjects());
-        if (!type.getItems().contains(SPIGOT_TYPE)) type.getItems().add(SPIGOT_TYPE);
+        var subtitle = new Label("Download a server jar, or compile Spigot locally with BuildTools.");
+        subtitle.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+        subtitle.setWrapText(true);
+        subtitle.setAlignment(Pos.CENTER);
+        subtitle.setMaxWidth(Double.MAX_VALUE);
 
         var version = blankCombo("Server Version");
         var build = blankCombo("Server Build");
 
-        type.setOnAction(actionEvent -> {
-            var project = type.getValue();
-            version.getItems().clear();
-            build.setDisable(true);
-            installBtn.setDisable(true);
+        infoNote = new Label();
+        infoNote.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+        infoNote.setWrapText(true);
+        infoNote.setMaxWidth(Double.MAX_VALUE);
 
-            try {
-                if (SPIGOT_TYPE.equalsIgnoreCase(project)) {
-                    version.getItems().addAll(API.fetchSpigotBuildToolsVersions());
-                    version.setDisable(false);
-                    build.getItems().clear();
-                    build.setDisable(true);
-                } else {
-                    version.getItems().addAll(API.fetchVersions(project));
-                    version.setDisable(false);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        installBtn = new Button("Install");
+        installBtn.getStyleClass().addAll(Styles.ACCENT, "hero-button");
+        installBtn.setMaxWidth(Double.MAX_VALUE);
+        installBtn.setDisable(true);
+
+        var typeGroup = new ToggleGroup();
+        var typeGrid = new FlowPane(12, 12);
+        typeGrid.setAlignment(Pos.CENTER);
+
+        List<String> projects = new ArrayList<>(API.fetchProjects());
+        if (!projects.contains(SPIGOT_TYPE)) projects.add(SPIGOT_TYPE);
+        for (String project : projects) {
+            typeGrid.getChildren().add(createTypeTile(project, typeGroup));
+        }
+
+        typeGroup.selectedToggleProperty().addListener((obs, previous, selected) -> {
+            if (selected == null) {
+                selectedType = null;
+                resetSelection(version, build);
+                updateInfoNote(null, null);
+                return;
             }
+            onTypeSelected((String) selected.getUserData(), version, build);
         });
 
         version.setOnAction(actionEvent -> {
-            var project = type.getValue();
-            var versionVal = version.getValue();
+            String versionVal = version.getValue();
             build.getItems().clear();
 
-            if (project == null || versionVal == null) {
+            if (selectedType == null || versionVal == null) {
                 installBtn.setDisable(true);
                 return;
             }
 
-            if (SPIGOT_TYPE.equalsIgnoreCase(project)) {
+            if (SPIGOT_TYPE.equalsIgnoreCase(selectedType)) {
                 build.setDisable(true);
                 installBtn.setDisable(false);
+                updateInfoNote(selectedType, versionVal);
                 return;
             }
 
             try {
-                build.getItems().addAll(API.extractBuildNumbers(currentBuilds = API.fetchBuilds(project, versionVal)));
+                build.getItems().addAll(API.extractBuildNumbers(currentBuilds = API.fetchBuilds(selectedType, versionVal)));
                 build.setDisable(false);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                LogViewer.system("Failed to load builds: " + e.getMessage());
             }
+            updateInfoNote(selectedType, versionVal);
         });
 
         build.setOnAction(actionEvent -> {
-            if (!SPIGOT_TYPE.equalsIgnoreCase(type.getValue())) {
-                installBtn.setDisable(false);
-            }
+            if (!SPIGOT_TYPE.equalsIgnoreCase(selectedType)) installBtn.setDisable(false);
         });
-
-        var form = new VBox(10, type, version, build);
-        form.setAlignment(Pos.TOP_CENTER);
-
-        installBtn = new Button("Install Server Jar");
-        installBtn.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
-        installBtn.setMaxWidth(Double.MAX_VALUE);
-        installBtn.setDisable(true);
-
-        var progressBar = new ProgressBar(0);
-        progressBar.getStyleClass().add(Styles.MEDIUM);
-        progressBar.setMaxWidth(Double.MAX_VALUE);
-        progressBar.setVisible(false);
-
-        statusLabel = new Label();
-        statusLabel.setWrapText(true);
-        statusLabel.setMaxWidth(Double.MAX_VALUE);
-        statusLabel.setVisible(false);
-        statusLabel.managedProperty().bind(statusLabel.visibleProperty());
 
         installBtn.setOnAction(e -> {
-            try {
-                if (SPIGOT_TYPE.equalsIgnoreCase(type.getValue())) {
-                    stage.close();
-                    runBuildTools(version.getValue());
-                    return;
-                }
+            String project = selectedType;
+            if (project == null) return;
 
-                handleDownload(
-                        progressBar,
-                        SettingsService.get().getServerPath().resolve("instance").resolve(type.getValue()),
-                        type.getValue(),
-                        version.getValue(),
-                        build.getValue(),
-                        API.openDownloadConnection(currentBuilds, build.getValue())
-                );
+            stage.close();
+            ServerMasterApp.focusConsole();
+
+            try {
+                if (SPIGOT_TYPE.equalsIgnoreCase(project)) {
+                    runBuildTools(version.getValue());
+                } else {
+                    downloadJar(
+                            SettingsService.get().getServerPath().resolve("instance").resolve(project),
+                            project,
+                            version.getValue(),
+                            build.getValue(),
+                            API.openDownloadConnection(currentBuilds, build.getValue())
+                    );
+                }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                LogViewer.system("Install failed: " + ex.getMessage());
             }
         });
 
-        var content = new VBox(12, header, form, installBtn, progressBar, statusLabel);
-        content.setPadding(new Insets(10, 16, 0, 16));
+        updateInfoNote(null, null);
+
+        var titleBox = new VBox(4, header, subtitle);
+        titleBox.setAlignment(Pos.CENTER);
+
+        var card = new VBox(14, typeGrid, version, build, infoNote, new Separator(), installBtn);
+        card.getStyleClass().add("status-card");
+        card.setFillWidth(true);
+
+        var column = new VBox(20, titleBox, card);
+        column.setAlignment(Pos.CENTER);
+        column.setMaxWidth(440);
+
+        var content = new StackPane(column);
+        content.setPadding(new Insets(10, 24, 24, 24));
 
         var surface = new WindowSurface();
         surface.getStyleClass().add("dialog");
@@ -176,10 +185,101 @@ public final class ServerInstallerDialog {
         surface.setCenter(content);
         BorderPane.setMargin(windowButtons, new Insets(6, 6, 0, 6));
 
-        var scene = new Scene(surface, 520, 320);
+        var scene = new Scene(surface, 520, 640);
         scene.setFill(Color.TRANSPARENT);
         FX.addStyleSheet(scene);
         stage.setScene(scene);
+    }
+
+    private ToggleButton createTypeTile(String project, ToggleGroup group) {
+        var tile = new ToggleButton();
+        tile.setToggleGroup(group);
+        tile.getStyleClass().add("logo-tile");
+        tile.setUserData(project);
+
+        var nameLabel = new Label(displayName(project));
+        nameLabel.getStyleClass().add("logo-tile-name");
+        nameLabel.setVisible(false);
+        nameLabel.setMouseTransparent(true);
+
+        Image logo = loadLogo(project);
+        if (logo != null) {
+            var icon = new ImageView(logo);
+            icon.setFitWidth(52);
+            icon.setFitHeight(52);
+            icon.setPreserveRatio(true);
+            icon.setSmooth(true);
+
+            tile.setGraphic(new StackPane(icon, nameLabel));
+            tile.hoverProperty().addListener((obs, wasHover, isHover) -> nameLabel.setVisible(isHover));
+        } else {
+            tile.setText(displayName(project));
+        }
+
+        return tile;
+    }
+
+    private void onTypeSelected(String project, ComboBox<String> version, ComboBox<String> build) {
+        selectedType = project;
+        resetSelection(version, build);
+
+        try {
+            if (SPIGOT_TYPE.equalsIgnoreCase(project)) {
+                version.getItems().addAll(API.fetchSpigotBuildToolsVersions());
+            } else {
+                version.getItems().addAll(API.fetchVersions(project));
+            }
+            version.setDisable(false);
+        } catch (Exception e) {
+            LogViewer.system("Failed to load versions: " + e.getMessage());
+        }
+
+        updateInfoNote(project, null);
+    }
+
+    private void resetSelection(ComboBox<String> version, ComboBox<String> build) {
+        version.getItems().clear();
+        version.setValue(null);
+        version.setDisable(true);
+        build.getItems().clear();
+        build.setValue(null);
+        build.setDisable(true);
+        installBtn.setDisable(true);
+    }
+
+    private Image loadLogo(String project) {
+        String path = "/images/logos/" + project.toLowerCase(Locale.ROOT) + ".png";
+        try (var stream = getClass().getResourceAsStream(path)) {
+            return stream != null ? new Image(stream) : null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static String displayName(String project) {
+        if (project == null || project.isBlank()) return "";
+        return Character.toUpperCase(project.charAt(0)) + project.substring(1);
+    }
+
+    private void updateInfoNote(String type, String version) {
+        if (type == null || type.isBlank()) {
+            infoNote.setText("Choose a server type to begin.");
+            return;
+        }
+
+        if (SPIGOT_TYPE.equalsIgnoreCase(type)) {
+            StringBuilder note = new StringBuilder(
+                    "Spigot is compiled locally with BuildTools — this can take several minutes and needs internet access and Git. Output is logged to the console.");
+            if (SettingsService.get().isMavenDeployReady()) {
+                note.append("\nThe compiled jar will also be deployed to ")
+                        .append(SettingsService.get().getMavenRepoUrl())
+                        .append(".");
+            }
+            infoNote.setText(note.toString());
+            return;
+        }
+
+        infoNote.setText("Downloads a ready-built " + type + " jar into your instance/" + type + " folder.");
     }
 
     private void runBuildTools(String minecraftVersion) {
@@ -196,12 +296,11 @@ public final class ServerInstallerDialog {
         var task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                ServerMasterApp.lockApplication();
-
                 Files.createDirectories(buildToolsDir);
 
                 downloadBuildTools(buildToolsJar);
                 cleanupStaleJGitLocks(buildToolsDir);
+                normalizeGitLineEndings(buildToolsDir);
 
                 LogViewer.system("Executing BuildTools (this can take a while)...");
 
@@ -222,6 +321,7 @@ public final class ServerInstallerDialog {
 
                 pb.directory(buildToolsDir.toFile());
                 pb.redirectErrorStream(true);
+                forceGitLineEndings(pb);
 
                 Process process = pb.start();
                 ServerMasterApp.registerBuildToolsProcess(process);
@@ -251,26 +351,217 @@ public final class ServerInstallerDialog {
                         StandardCopyOption.COPY_ATTRIBUTES);
 
                 LogViewer.system("Spigot jar built: " + outJar.getFileName());
+
+                if (config.isMavenDeployReady()) {
+                    deployToMaven(config);
+                }
                 return null;
             }
         };
 
         task.setOnSucceeded(e -> {
-            ServerMasterApp.unlockApplication();
+            ServerMasterApp.endInstall();
             ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
         });
 
         task.setOnFailed(e -> {
-            ServerMasterApp.unlockApplication();
+            ServerMasterApp.endInstall();
             Throwable ex = task.getException();
             LogViewer.system("BuildTools failed: " + (ex == null ? "Unknown error" : ex.getMessage()));
         });
 
-        task.setOnCancelled(e -> ServerMasterApp.unlockApplication());
+        task.setOnCancelled(e -> ServerMasterApp.endInstall());
+
+        ServerMasterApp.beginInstall(true);
 
         var thread = new Thread(task, "servermaster-buildtools");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private void deployToMaven(AppSettings config) throws IOException, InterruptedException {
+        List<String> selectedKeys = config.getMavenDeployArtifacts();
+        List<BuildToolsArtifacts.BuiltJar> toDeploy = BuildToolsArtifacts.scan().stream()
+                .filter(jar -> selectedKeys.contains(jar.deployKey()))
+                .toList();
+
+        if (toDeploy.isEmpty()) {
+            LogViewer.system("Maven deploy skipped: no jars selected (choose them in Settings → Developer).");
+            return;
+        }
+
+        Path settingsFile = Files.createTempFile("servermaster-mvn-settings", ".xml");
+        try {
+            Files.writeString(settingsFile, buildMavenSettings(config));
+            for (BuildToolsArtifacts.BuiltJar jar : toDeploy) {
+                deploySingleJar(jar, config, settingsFile);
+            }
+        } finally {
+            Files.deleteIfExists(settingsFile);
+        }
+    }
+
+    private void deploySingleJar(BuildToolsArtifacts.BuiltJar jar, AppSettings config, Path settingsFile) throws InterruptedException {
+        LogViewer.system("Deploying " + jar.fileName() + " to " + config.getMavenRepoUrl() + " ...");
+
+        Path stagingDir;
+        Path stagedJar;
+        Path stagedPom = null;
+        try {
+            stagingDir = Files.createTempDirectory("servermaster-deploy");
+            stagedJar = stagingDir.resolve(jar.fileName());
+            Files.copy(jar.path(), stagedJar, StandardCopyOption.REPLACE_EXISTING);
+            if (jar.pomFile() != null) {
+                stagedPom = stagingDir.resolve(jar.pomFile().getFileName().toString());
+                Files.copy(jar.pomFile(), stagedPom, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            LogViewer.system("Maven deploy could not stage " + jar.fileName() + ": " + e.getMessage());
+            return;
+        }
+
+        var command = new ArrayList<>(List.of(
+                mavenExecutable(),
+                "-s", settingsFile.toAbsolutePath().toString(),
+                "deploy:deploy-file",
+                "-Durl=" + config.getMavenRepoUrl(),
+                "-DrepositoryId=" + config.getMavenRepoId(),
+                "-Dpackaging=jar",
+                "-Dfile=" + stagedJar.toAbsolutePath()
+        ));
+
+        if (stagedPom != null) {
+            command.add("-DpomFile=" + stagedPom.toAbsolutePath());
+        } else {
+            command.add("-DgroupId=" + jar.groupId());
+            command.add("-DartifactId=" + jar.artifactId());
+            command.add("-Dversion=" + jar.version());
+        }
+
+        if (jar.classifier() != null && !jar.classifier().isBlank()) {
+            command.add("-Dclassifier=" + jar.classifier());
+        }
+
+        var pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true);
+
+        try {
+            Process process = pb.start();
+
+            try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (!line.isBlank()) LogViewer.console(line);
+                }
+            } catch (IOException e) {
+                LogViewer.system("Maven deploy stream error: " + e.getMessage());
+            }
+
+            int exit = process.waitFor();
+            if (exit == 0) LogViewer.system("Deployed " + jar.deployKey() + " " + jar.version() + ".");
+            else LogViewer.system("Deploy failed for " + jar.fileName() + " (exit code " + exit + ").");
+        } catch (IOException e) {
+            LogViewer.system("Maven deploy could not start (is 'mvn' on your PATH?): " + e.getMessage());
+        } finally {
+            deleteQuietly(stagedPom);
+            deleteQuietly(stagedJar);
+            deleteQuietly(stagingDir);
+        }
+    }
+
+    private static void deleteQuietly(Path path) {
+        if (path == null) return;
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static String buildMavenSettings(AppSettings config) {
+        return """
+                <settings>
+                  <servers>
+                    <server>
+                      <id>%s</id>
+                      <username>%s</username>
+                      <password>%s</password>
+                    </server>
+                  </servers>
+                </settings>
+                """.formatted(
+                escapeXml(config.getMavenRepoId()),
+                escapeXml(config.getMavenUsername()),
+                escapeXml(config.getMavenPassword()));
+    }
+
+    private static String escapeXml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    private static String mavenExecutable() {
+        return System.getProperty("os.name", "").toLowerCase().contains("win") ? "mvn.cmd" : "mvn";
+    }
+
+    /**
+     * BuildTools' shell scripts break when git checks them out with CRLF line endings
+     * (typically inherited from a repo cloned with autocrlf=true). Force LF for every
+     * repository already present so reused checkouts stay POSIX-clean.
+     */
+    private static void normalizeGitLineEndings(Path buildToolsDir) {
+        Path[] repos = findGitRepos(buildToolsDir);
+        for (Path repo : repos) {
+            runGit(repo, "config", "core.autocrlf", "false");
+            runGit(repo, "config", "core.eol", "lf");
+            runGit(repo, "rm", "--cached", "-r", "--quiet", ".");
+            runGit(repo, "reset", "--hard", "--quiet");
+        }
+        if (repos.length > 0) {
+            LogViewer.system("Normalized line endings for " + repos.length + " BuildTools repositories.");
+        }
+    }
+
+    private static Path[] findGitRepos(Path buildToolsDir) {
+        if (!Files.isDirectory(buildToolsDir)) return new Path[0];
+        try (Stream<Path> stream = Files.walk(buildToolsDir, 3)) {
+            return stream
+                    .filter(Files::isDirectory)
+                    .filter(path -> !path.toString().contains("PortableGit"))
+                    .filter(path -> Files.exists(path.resolve(".git")))
+                    .toArray(Path[]::new);
+        } catch (IOException e) {
+            LogViewer.system("Could not scan BuildTools folder for repositories: " + e.getMessage());
+            return new Path[0];
+        }
+    }
+
+    private static void runGit(Path repo, String... args) {
+        var command = new ArrayList<String>();
+        command.add("git");
+        command.add("-C");
+        command.add(repo.toAbsolutePath().toString());
+        Collections.addAll(command, args);
+
+        try {
+            var builder = new ProcessBuilder(command);
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            process.getInputStream().readAllBytes();
+            process.waitFor();
+        } catch (IOException ignored) {
+            // best-effort normalization; BuildTools will report a clearer error if git is unusable
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static void forceGitLineEndings(ProcessBuilder builder) {
+        var env = builder.environment();
+        env.put("GIT_CONFIG_COUNT", "2");
+        env.put("GIT_CONFIG_KEY_0", "core.autocrlf");
+        env.put("GIT_CONFIG_VALUE_0", "false");
+        env.put("GIT_CONFIG_KEY_1", "core.eol");
+        env.put("GIT_CONFIG_VALUE_1", "lf");
     }
 
     private void downloadBuildTools(Path targetJar) throws IOException, InterruptedException {
@@ -325,26 +616,18 @@ public final class ServerInstallerDialog {
         return cb;
     }
 
-    private void handleDownload(ProgressBar progress, Path folder, String type, String version, String build, HttpURLConnection connection) {
-        installBtn.setDisable(true);
-        progress.setVisible(true);
-        progress.setProgress(0);
-        statusLabel.setVisible(false);
-
-        try {
-            Files.createDirectories(folder);
-        } catch (IOException e) {
-            installBtn.setDisable(false);
-            progress.setVisible(false);
-            throw new RuntimeException("Failed to create folder: " + folder, e);
-        }
-
+    private void downloadJar(Path folder, String type, String version, String build, HttpURLConnection connection) {
         var file = folder.resolve(type + "-" + version + "-" + build + ".jar");
         var fileName = file.getFileName().toString();
+
+        LogViewer.system("Downloading " + fileName + " ...");
+        ServerMasterApp.beginInstall(false);
 
         var task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
+                Files.createDirectories(folder);
+
                 connection.setInstanceFollowRedirects(true);
                 connection.setRequestProperty("User-Agent", "ServerMaster");
                 connection.connect();
@@ -369,11 +652,8 @@ public final class ServerInstallerDialog {
                         out.write(buf, 0, read);
                         readTotal += read;
 
-                        if (contentLength > 0) {
-                            updateProgress(readTotal, contentLength);
-                        } else {
-                            updateProgress(-1, 1);
-                        }
+                        if (contentLength > 0) updateProgress(readTotal, contentLength);
+                        else updateProgress(-1, 1);
                     }
                 } finally {
                     connection.disconnect();
@@ -383,41 +663,21 @@ public final class ServerInstallerDialog {
             }
         };
 
-        progress.progressProperty().bind(task.progressProperty());
+        task.progressProperty().addListener((obs, oldV, newV) -> ServerMasterApp.reportInstallProgress(newV.doubleValue()));
 
         task.setOnSucceeded(e -> {
-            progress.progressProperty().unbind();
-            progress.setProgress(0);
-            progress.setVisible(false);
-            installBtn.setDisable(false);
-
-            statusLabel.getStyleClass().removeAll(Styles.DANGER);
-            statusLabel.getStyleClass().add(Styles.SUCCESS);
-            statusLabel.setText("Installed: " + fileName);
-            statusLabel.setVisible(true);
-
+            ServerMasterApp.endInstall();
+            LogViewer.system("Installed: " + fileName);
             ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
         });
 
         task.setOnFailed(e -> {
-            progress.progressProperty().unbind();
-            progress.setProgress(0);
-            progress.setVisible(false);
-            installBtn.setDisable(false);
-
+            ServerMasterApp.endInstall();
             Throwable ex = task.getException();
-            statusLabel.getStyleClass().removeAll(Styles.SUCCESS);
-            statusLabel.getStyleClass().add(Styles.DANGER);
-            statusLabel.setText(ex == null ? "Unknown error" : ex.getMessage());
-            statusLabel.setVisible(true);
+            LogViewer.system("Install failed: " + (ex == null ? "Unknown error" : ex.getMessage()));
         });
 
-        task.setOnCancelled(e -> {
-            progress.progressProperty().unbind();
-            progress.setProgress(0);
-            progress.setVisible(false);
-            installBtn.setDisable(false);
-        });
+        task.setOnCancelled(e -> ServerMasterApp.endInstall());
 
         var thread = new Thread(task, "servermaster-jar-download");
         thread.setDaemon(true);

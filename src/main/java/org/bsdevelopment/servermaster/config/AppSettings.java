@@ -23,7 +23,22 @@ public class AppSettings {
     private boolean forceStopDefault = false;
     private boolean quickRestartDefault = false;
 
+    private boolean developerMode = false;
+    private boolean mavenDeployEnabled = false;
+    private String mavenRepoUrl = "";
+    private String mavenRepoId = "";
+    private String mavenUsername = "";
+    private String mavenPassword = "";
+    private List<String> mavenDeployArtifacts = new ArrayList<>();
+
     private List<String> recentCommands = new ArrayList<>();
+
+    public boolean isMavenDeployReady() {
+        return developerMode
+                && mavenDeployEnabled
+                && mavenRepoUrl != null && !mavenRepoUrl.isBlank()
+                && mavenRepoId != null && !mavenRepoId.isBlank();
+    }
 
     public boolean isInitialized() {
         return appConfigVersion != -1;
