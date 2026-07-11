@@ -2,6 +2,7 @@ package org.bsdevelopment.servermaster;
 
 import atlantafx.base.theme.NordDark;
 import fr.brouillard.oss.cssfx.CSSFX;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
@@ -10,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import org.bsdevelopment.servermaster.backend.AppUpdater;
 import org.bsdevelopment.servermaster.backend.GitHubUpdateChecker;
 import org.bsdevelopment.servermaster.backend.ViaJenkinsPluginUpdater;
@@ -33,8 +35,12 @@ public class ServerMasterApp extends Application {
 
     private static final BooleanProperty APPLICATION_LOCKED = new SimpleBooleanProperty(false);
     private static final BooleanProperty INSTALL_ACTIVE = new SimpleBooleanProperty(false);
+    private static final BooleanProperty INSTALL_STATUS_VISIBLE = new SimpleBooleanProperty(false);
     private static final DoubleProperty INSTALL_PROGRESS = new SimpleDoubleProperty(0);
+    private static final StringProperty INSTALL_STATUS_MESSAGE = new SimpleStringProperty("");
+    private static final StringProperty INSTALL_STATE = new SimpleStringProperty("running");
     private static Runnable consoleFocusHandler = () -> {};
+    private static PauseTransition installStatusHide;
 
     private static final Object BUILDTOOLS_LOCK = new Object();
     private static volatile Process buildToolsProcess;
@@ -134,10 +140,26 @@ public class ServerMasterApp extends Application {
         return INSTALL_PROGRESS;
     }
 
+    public static ReadOnlyBooleanProperty installStatusVisibleProperty() {
+        return INSTALL_STATUS_VISIBLE;
+    }
+
+    public static ReadOnlyStringProperty installStatusMessageProperty() {
+        return INSTALL_STATUS_MESSAGE;
+    }
+
+    public static ReadOnlyStringProperty installStateProperty() {
+        return INSTALL_STATE;
+    }
+
     public static void beginInstall(boolean indeterminate) {
         Platform.runLater(() -> {
+            if (installStatusHide != null) installStatusHide.stop();
             INSTALL_PROGRESS.set(indeterminate ? -1 : 0);
+            INSTALL_STATE.set("running");
+            INSTALL_STATUS_MESSAGE.set("Installing…");
             INSTALL_ACTIVE.set(true);
+            INSTALL_STATUS_VISIBLE.set(true);
             APPLICATION_LOCKED.set(true);
         });
     }
@@ -147,11 +169,31 @@ public class ServerMasterApp extends Application {
         else Platform.runLater(() -> INSTALL_PROGRESS.set(value));
     }
 
-    public static void endInstall() {
+    public static void endInstall(boolean success, String message) {
         Platform.runLater(() -> {
+            if (installStatusHide != null) installStatusHide.stop();
+            INSTALL_ACTIVE.set(false);
+            INSTALL_PROGRESS.set(success ? 1 : 0);
+            APPLICATION_LOCKED.set(false);
+            INSTALL_STATE.set(success ? "success" : "failed");
+            INSTALL_STATUS_MESSAGE.set(message != null ? message
+                    : (success ? "Installation complete" : "Installation failed"));
+            INSTALL_STATUS_VISIBLE.set(true);
+
+            installStatusHide = new PauseTransition(Duration.seconds(8));
+            installStatusHide.setOnFinished(e -> INSTALL_STATUS_VISIBLE.set(false));
+            installStatusHide.playFromStart();
+        });
+    }
+
+    public static void cancelInstall() {
+        Platform.runLater(() -> {
+            if (installStatusHide != null) installStatusHide.stop();
             INSTALL_ACTIVE.set(false);
             INSTALL_PROGRESS.set(0);
             APPLICATION_LOCKED.set(false);
+            INSTALL_STATE.set("running");
+            INSTALL_STATUS_VISIBLE.set(false);
         });
     }
 

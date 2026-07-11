@@ -208,6 +208,11 @@ public final class MainWindow {
         pill.getStyleClass().add(running ? "running" : "stopped");
     }
 
+    private static void applyInstallState(Label label, String state) {
+        label.getStyleClass().removeAll("running", "success", "failed");
+        label.getStyleClass().add(state == null ? "running" : state);
+    }
+
     private void refreshDashboardMeta() {
         if (metaLabel == null) return;
         var settings = SettingsService.get();
@@ -239,17 +244,22 @@ public final class MainWindow {
 
         topButtons.getChildren().addAll(autoScrollToggle, buttonSpacer, restartButton, stopButton);
 
-        var installLabel = new Label("Installing…");
-        installLabel.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.TEXT_SMALL);
+        var installLabel = new Label();
+        installLabel.getStyleClass().addAll("install-status", Styles.TEXT_SMALL);
+        installLabel.textProperty().bind(ServerMasterApp.installStatusMessageProperty());
+        applyInstallState(installLabel, ServerMasterApp.installStateProperty().get());
+        ServerMasterApp.installStateProperty().addListener((obs, was, state) -> applyInstallState(installLabel, state));
 
         var installBar = new ProgressBar();
         installBar.setMaxWidth(Double.MAX_VALUE);
         installBar.progressProperty().bind(ServerMasterApp.installProgressProperty());
+        installBar.visibleProperty().bind(ServerMasterApp.installActiveProperty());
+        installBar.managedProperty().bind(installBar.visibleProperty());
         HBox.setHgrow(installBar, Priority.ALWAYS);
 
         var installRow = new HBox(10, installLabel, installBar);
         installRow.setAlignment(Pos.CENTER_LEFT);
-        installRow.visibleProperty().bind(ServerMasterApp.installActiveProperty());
+        installRow.visibleProperty().bind(ServerMasterApp.installStatusVisibleProperty());
         installRow.managedProperty().bind(installRow.visibleProperty());
 
         var consoleBox = new VBox(10, topButtons, installRow, console);

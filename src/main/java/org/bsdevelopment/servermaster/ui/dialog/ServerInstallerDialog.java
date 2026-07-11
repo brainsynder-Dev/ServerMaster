@@ -360,17 +360,17 @@ public final class ServerInstallerDialog {
         };
 
         task.setOnSucceeded(e -> {
-            ServerMasterApp.endInstall();
+            ServerMasterApp.endInstall(true, "Spigot " + minecraftVersion + " built");
             ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
         });
 
         task.setOnFailed(e -> {
-            ServerMasterApp.endInstall();
             Throwable ex = task.getException();
+            ServerMasterApp.endInstall(false, "BuildTools failed");
             LogViewer.system("BuildTools failed: " + (ex == null ? "Unknown error" : ex.getMessage()));
         });
 
-        task.setOnCancelled(e -> ServerMasterApp.endInstall());
+        task.setOnCancelled(e -> ServerMasterApp.cancelInstall());
 
         ServerMasterApp.beginInstall(true);
 
@@ -666,18 +666,18 @@ public final class ServerInstallerDialog {
         task.progressProperty().addListener((obs, oldV, newV) -> ServerMasterApp.reportInstallProgress(newV.doubleValue()));
 
         task.setOnSucceeded(e -> {
-            ServerMasterApp.endInstall();
+            ServerMasterApp.endInstall(true, "Installed " + fileName);
             LogViewer.system("Installed: " + fileName);
             ServerMasterApp.instanceCatalog = new InstanceCatalog(SettingsService.get().getServerPath());
         });
 
         task.setOnFailed(e -> {
-            ServerMasterApp.endInstall();
             Throwable ex = task.getException();
+            ServerMasterApp.endInstall(false, "Install failed");
             LogViewer.system("Install failed: " + (ex == null ? "Unknown error" : ex.getMessage()));
         });
 
-        task.setOnCancelled(e -> ServerMasterApp.endInstall());
+        task.setOnCancelled(e -> ServerMasterApp.cancelInstall());
 
         var thread = new Thread(task, "servermaster-jar-download");
         thread.setDaemon(true);

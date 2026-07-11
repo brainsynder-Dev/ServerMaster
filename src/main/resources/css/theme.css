@@ -341,3 +341,19 @@
     -fx-font-size: 12px;
     -fx-padding: 3 9 3 9;
 }
+
+.install-status {
+    -fx-font-weight: 600;
+}
+
+.install-status.running {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.install-status.success {
+    -fx-text-fill: -color-success-fg;
+}
+
+.install-status.failed {
+    -fx-text-fill: -color-danger-fg;
+}
