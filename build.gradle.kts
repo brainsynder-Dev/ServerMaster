@@ -61,6 +61,13 @@ dependencies {
     implementation("com.github.oshi:oshi-core:6.9.3")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.0.1")
     implementation("org.yaml:snakeyaml:2.2")
+
+    for (nativePlatform in listOf("win", "linux")) {
+        runtimeOnly("org.openjfx:javafx-base:$javafxVersion:$nativePlatform")
+        runtimeOnly("org.openjfx:javafx-graphics:$javafxVersion:$nativePlatform")
+        runtimeOnly("org.openjfx:javafx-controls:$javafxVersion:$nativePlatform")
+        runtimeOnly("org.openjfx:javafx-fxml:$javafxVersion:$nativePlatform")
+    }
 }
 
 tasks.withType<JavaCompile> {
