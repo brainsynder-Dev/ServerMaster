@@ -12,14 +12,18 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.bsdevelopment.servermaster.Constants;
+import org.bsdevelopment.servermaster.LogViewer;
 import org.bsdevelopment.servermaster.ServerMasterApp;
 import org.bsdevelopment.servermaster.config.AppSettings;
 import org.bsdevelopment.servermaster.config.SettingsService;
+import org.bsdevelopment.servermaster.instance.WorldInstanceManager;
 import org.bsdevelopment.servermaster.instance.server.ServerHandlerAPI;
 import org.bsdevelopment.servermaster.instance.server.ServerLaunchConfig;
 import org.bsdevelopment.servermaster.instance.server.gamerule.GameRuleFileApplier;
 import org.bsdevelopment.servermaster.instance.server.thread.ServerOutputListener;
+import org.bsdevelopment.servermaster.ui.dialog.ConfirmDialog;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -138,11 +142,42 @@ public final class ServerSelectionPane extends VBox {
             updateSummary();
         });
 
-        getChildren().addAll(type, version, build, start);
+        var regenerate = new Button("Regenerate World");
+        regenerate.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.DANGER);
+        regenerate.setMaxWidth(Double.MAX_VALUE);
+        regenerate.disableProperty().bind(Bindings.or(serverRunning.or(locked),
+                Bindings.createBooleanBinding(() -> {
+                    String t = type.getValue();
+                    String v = version.getValue();
+                    return t == null || t.isBlank() || v == null || v.isBlank();
+                }, type.valueProperty(), version.valueProperty())));
+        regenerate.setOnAction(actionEvent -> confirmRegenerate());
+
+        getChildren().addAll(type, version, build, start, regenerate);
         VBox.setVgrow(start, Priority.NEVER);
 
         updateSummary();
         start.setOnAction(actionEvent -> startSelectedServer());
+    }
+
+    private void confirmRegenerate() {
+        String selectedType = type.getValue();
+        String selectedVersion = version.getValue();
+        if (selectedType == null || selectedType.isBlank() || selectedVersion == null || selectedVersion.isBlank()) return;
+
+        Stage owner = getScene() != null && getScene().getWindow() instanceof Stage s ? s : null;
+        new ConfirmDialog(owner,
+                "Regenerate World",
+                "This permanently deletes the saved world for " + selectedType + " " + selectedVersion
+                        + ". A brand-new world is generated the next time you start it. This cannot be undone.",
+                "DELETE & REGENERATE",
+                () -> {
+                    try {
+                        WorldInstanceManager.regenerateWorld(Constants.WORKING_PATH, selectedType, selectedVersion);
+                    } catch (IOException ex) {
+                        LogViewer.system("Failed to regenerate world: " + ex.getMessage());
+                    }
+                }).show();
     }
 
     public ReadOnlyStringProperty summaryProperty() {
@@ -172,7 +207,7 @@ public final class ServerSelectionPane extends VBox {
                 List.of()
         );
 
-        Path gameruleFile = Constants.WORKING_PATH.resolve("gamerules.json");
+        Path gameruleFile = ServerMasterApp.resolveDataFile("gamerules.json");
         ServerOutputListener wrapped = GameRuleFileApplier.wrap(outputListener, gameruleFile);
 
         ServerHandlerAPI.startServer(

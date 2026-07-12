@@ -27,6 +27,7 @@ import org.bsdevelopment.servermaster.components.TopBar;
 import org.bsdevelopment.servermaster.config.SettingsService;
 import org.bsdevelopment.servermaster.instance.server.ServerHandlerAPI;
 import org.bsdevelopment.servermaster.instance.server.thread.ServerOutputListener;
+import org.bsdevelopment.servermaster.ui.dialog.GameRulesDialog;
 import org.bsdevelopment.servermaster.ui.dialog.ServerInstallerDialog;
 import org.bsdevelopment.servermaster.ui.dialog.SettingsDialog;
 import org.bsdevelopment.servermaster.ui.window.WindowSurface;
@@ -181,6 +182,13 @@ public final class MainWindow {
         });
         HBox.setHgrow(installer, Priority.ALWAYS);
 
+        var gameRules = new Button("Game Rules");
+        gameRules.getStyleClass().add(Styles.BUTTON_OUTLINED);
+        gameRules.setMaxWidth(Double.MAX_VALUE);
+        gameRules.disableProperty().bind(locked);
+        gameRules.setOnAction(e -> new GameRulesDialog(stage).show());
+        HBox.setHgrow(gameRules, Priority.ALWAYS);
+
         var settings = new Button("Settings");
         settings.getStyleClass().add(Styles.BUTTON_OUTLINED);
         settings.setMaxWidth(Double.MAX_VALUE);
@@ -188,7 +196,7 @@ public final class MainWindow {
         settings.setOnAction(e -> new SettingsDialog(stage).show());
         HBox.setHgrow(settings, Priority.ALWAYS);
 
-        var actions = new HBox(12, installer, settings);
+        var actions = new HBox(12, installer, gameRules, settings);
         actions.setMaxWidth(480);
         actions.setAlignment(Pos.CENTER);
 

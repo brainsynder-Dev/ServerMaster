@@ -4,12 +4,8 @@ import lombok.Setter;
 import org.bsdevelopment.servermaster.Constants;
 import org.bsdevelopment.servermaster.instance.server.Server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -51,7 +47,7 @@ public class ServerThread extends Thread {
         new Thread(new StreamRedirector(server, ServerOutputListener.Stream.STDERR, process.getErrorStream(), outputListener),
                 getName() + "-stderr").start();
 
-        printWriter = new PrintWriter(new OutputStreamWriter(process.getOutputStream()));
+        printWriter = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
 
         try {
             int result = process.waitFor();
@@ -69,8 +65,10 @@ public class ServerThread extends Thread {
 
     public void sendMessage(String message) {
         try {
-            Constants.LOGGER.fine(() -> "Executing command: '" + message + "'");
-            printWriter.println(message);
+            String cleaned = message == null ? "" : message.stripTrailing();
+            Constants.LOGGER.fine(() -> "Executing command: '" + cleaned + "'");
+            printWriter.print(cleaned);
+            printWriter.print('\n');
             printWriter.flush();
         } catch (Exception e) {
             Constants.LOGGER.log(Level.WARNING, "Unable to execute command: '" + message + "'", e);

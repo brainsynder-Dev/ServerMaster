@@ -32,6 +32,7 @@ import java.nio.file.Path;
 public class ServerMasterApp extends Application {
     public static InstanceCatalog instanceCatalog;
     private static ServerWrapper serverWrapper;
+    private static Path dataDirectory;
 
     private static final BooleanProperty APPLICATION_LOCKED = new SimpleBooleanProperty(false);
     private static final BooleanProperty INSTALL_ACTIVE = new SimpleBooleanProperty(false);
@@ -225,6 +226,11 @@ public class ServerMasterApp extends Application {
         process.destroyForcibly();
     }
 
+    public static Path resolveDataFile(String fileName) {
+        Path directory = dataDirectory != null ? dataDirectory : Constants.WORKING_PATH;
+        return directory.resolve(fileName);
+    }
+
     private static File resolveConfigFile() {
         boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
         String home = System.getProperty("user.home");
@@ -240,8 +246,10 @@ public class ServerMasterApp extends Application {
         try {
             Files.createDirectories(dir);
         } catch (Exception ignored) {
-            return Constants.WORKING_PATH.resolve("configuration.json").toFile();
+            dir = Constants.WORKING_PATH;
         }
+
+        dataDirectory = dir;
         return dir.resolve("configuration.json").toFile();
     }
 

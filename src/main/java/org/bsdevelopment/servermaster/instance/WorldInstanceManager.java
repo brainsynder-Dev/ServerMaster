@@ -108,6 +108,34 @@ public final class WorldInstanceManager {
     }
 
     /**
+     * Permanently deletes the saved world for {@code serverType}/{@code version} so the
+     * server generates a fresh one on its next start. Removes the matching
+     * {@code world_instances/{name}} folder, and — if that instance is the one currently
+     * active in {@code serverRoot} — also clears the live {@code world*} dimension folders.
+     */
+    public static void regenerateWorld(Path serverRoot, String serverType, String version) throws IOException {
+        String targetName = instanceFolderName(serverType, version);
+
+        Path savedInstance = serverRoot.resolve("world_instances").resolve(targetName);
+        if (Files.isDirectory(savedInstance)) {
+            deleteDirectory(savedInstance);
+            LogViewer.system("Deleted saved world → world_instances/" + targetName);
+        }
+
+        Path activeWorld = serverRoot.resolve("world");
+        Path infoFile = activeWorld.resolve(WORLD_INFO_FILE);
+        if (Files.exists(infoFile) && targetName.equals(readProperty(infoFile, "instance-name"))) {
+            for (String dim : DIMENSION_FOLDERS) {
+                Path dir = serverRoot.resolve(dim);
+                if (Files.isDirectory(dir)) deleteDirectory(dir);
+            }
+            LogViewer.system("Cleared the active world for " + targetName + ".");
+        }
+
+        LogViewer.system("A fresh world for " + serverType + " " + version + " will be generated on next start.");
+    }
+
+    /**
      * Writes (or overwrites) the {@code world.info} file inside {@code worldDir}.
      * Called automatically by {@link #swapWorld} when creating a fresh world folder.
      * Exposed publicly so callers can stamp an existing folder that lacks world.info.

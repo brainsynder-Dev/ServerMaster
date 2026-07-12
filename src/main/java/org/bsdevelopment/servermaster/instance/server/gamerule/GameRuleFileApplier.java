@@ -13,12 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -46,6 +41,7 @@ public final class GameRuleFileApplier implements ServerOutputListener {
             ".*(Invalid|Expected).*(true|false|boolean|integer|int).*",
             Pattern.CASE_INSENSITIVE
     );
+    private static final Pattern GAMERULE_SET = Pattern.compile(".*is now set to.*", Pattern.CASE_INSENSITIVE);
     private static final long RESPONSE_TIMEOUT_MS = 650;
     private static final long BETWEEN_RULES_MS = 120;
 
@@ -56,9 +52,12 @@ public final class GameRuleFileApplier implements ServerOutputListener {
     private volatile boolean started;
     private volatile boolean finished;
     private String currentCanonical;
-    private String currentValue;
-    private List<String> currentNames;
-    private int currentNameIndex;
+    private List<Attempt> currentAttempts;
+    private int currentAttemptIndex;
+    private String currentAttemptName;
+    private String currentAttemptValue;
+    private String currentSentCommand;
+    private String lastErrorDetail;
     private ScheduledFuture<?> timeoutFuture;
 
     public static ServerOutputListener wrap(ServerOutputListener outputListener, Path jsonFile) {
@@ -72,6 +71,9 @@ public final class GameRuleFileApplier implements ServerOutputListener {
     }
 
     private record LoadedRules(LinkedHashMap<String, String> rules, Map<String, List<String>> aliasesByRuleName) {
+    }
+
+    private record Attempt(String name, String value) {
     }
 
     private static LoadedRules loadRuleFile(Path file) {
@@ -146,8 +148,12 @@ public final class GameRuleFileApplier implements ServerOutputListener {
 
     @Override
     public void onLine(Server server, Stream stream, String line) {
-        if (!line.contains(" INFO]: Incorrect argument for command") && !UNKNOWN_GAMERULE_4.matcher(line).matches())
-            delegate.onLine(server, stream, line);
+        boolean parseError = line.contains(" INFO]: Incorrect argument for command") || UNKNOWN_GAMERULE_4.matcher(line).matches();
+        if (!parseError) delegate.onLine(server, stream, line);
+
+        if (started && !finished && currentCanonical != null && UNKNOWN_GAMERULE_4.matcher(line).matches()) {
+            lastErrorDetail = line.trim();
+        }
 
         if (!started && SERVER_READY.matcher(line).matches()) {
             started = true;
@@ -159,6 +165,12 @@ public final class GameRuleFileApplier implements ServerOutputListener {
 
         if (!started || finished) return;
         if (currentCanonical == null) return;
+
+        if (currentAttemptName != null && GAMERULE_SET.matcher(line).matches()
+                && line.toLowerCase().contains(currentAttemptName.toLowerCase())) {
+            scheduler.execute(this::confirmSuccess);
+            return;
+        }
 
         if (UNKNOWN_GAMERULE_1.matcher(line).matches()
                 || UNKNOWN_GAMERULE_2.matcher(line).matches()
@@ -184,53 +196,126 @@ public final class GameRuleFileApplier implements ServerOutputListener {
 
         var entry = iterator.next();
         currentCanonical = entry.getKey();
-        currentValue = entry.getValue();
 
-        currentNames = buildNameList(currentCanonical);
-        currentNameIndex = 0;
+        currentAttempts = buildAttempts(currentCanonical, entry.getValue());
+        currentAttemptIndex = 0;
+        lastErrorDetail = null;
 
         sendAttempt();
     }
 
-    private List<String> buildNameList(String canonical) {
-        List<String> aliases = data.aliasesByRuleName.get(canonical);
-        if (aliases == null || aliases.isEmpty()) return List.of(canonical);
+    private List<Attempt> buildAttempts(String canonical, String value) {
+        var attempts = new ArrayList<Attempt>();
+        var seenNames = new ArrayList<String>();
 
-        var list = new ArrayList<String>(1 + aliases.size());
-        list.add(canonical);
-        list.addAll(aliases);
-        return List.copyOf(list);
+        addAttempt(attempts, seenNames, canonical, value);
+
+        GameRuleCatalog.GameRule rule = GameRuleCatalog.find(canonical);
+        if (rule != null) {
+            for (GameRuleCatalog.Alias alias : rule.aliases()) {
+                String aliasValue = alias.invertBoolean() ? invertBoolean(value) : value;
+                addAttempt(attempts, seenNames, alias.name(), aliasValue);
+            }
+        }
+
+        List<String> userAliases = data.aliasesByRuleName.get(canonical);
+        if (userAliases != null) {
+            for (String userAlias : userAliases) addAttempt(attempts, seenNames, userAlias, value);
+        }
+
+        return List.copyOf(attempts);
+    }
+
+    private static void addAttempt(List<Attempt> attempts, List<String> seenNames, String name, String value) {
+        if (name == null || name.isBlank()) return;
+        for (String seen : seenNames) {
+            if (seen.equalsIgnoreCase(name)) return;
+        }
+        seenNames.add(name);
+        attempts.add(new Attempt(name, value));
+    }
+
+    private static String invertBoolean(String value) {
+        if ("true".equalsIgnoreCase(value)) return "false";
+        if ("false".equalsIgnoreCase(value)) return "true";
+        return value;
     }
 
     private void sendAttempt() {
         cancelTimeout();
 
-        if (currentNameIndex >= currentNames.size()) {
-            LogViewer.system("Failed to apply gamerule '" + currentCanonical + "' (no alias worked).");
+        if (currentAttemptIndex >= currentAttempts.size()) {
+            currentAttemptName = null;
+            String reason = lastErrorDetail != null ? "server rejected it: " + lastErrorDetail
+                    : "no known name for this version worked";
+            LogViewer.system("Could not apply gamerule '" + currentCanonical + "' — " + reason
+                    + "  [sent: \"" + visible(currentSentCommand) + "\", length="
+                    + (currentSentCommand == null ? 0 : currentSentCommand.length()) + "]");
             scheduleNext();
             return;
         }
 
-        String name = currentNames.get(currentNameIndex);
-        ServerHandlerAPI.sendServerCommand("gamerule " + name + " " + currentValue);
+        Attempt attempt = currentAttempts.get(currentAttemptIndex);
+        currentAttemptName = attempt.name();
+        currentAttemptValue = attempt.value();
 
-        timeoutFuture = scheduler.schedule(() -> assumeSuccess(name), RESPONSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        String command = "gamerule " + sanitizeToken(attempt.name()) + " " + sanitizeToken(attempt.value());
+        currentSentCommand = command;
+        ServerHandlerAPI.sendServerCommand(command);
+
+        timeoutFuture = scheduler.schedule(() -> assumeSuccess(attempt.name(), attempt.value()), RESPONSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private static String sanitizeToken(String token) {
+        if (token == null) return "";
+
+        var builder = new StringBuilder(token.length());
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
+            if (Character.isISOControl(c)) continue;
+            if (Character.getType(c) == Character.FORMAT) continue;
+            builder.append(c);
+        }
+        return builder.toString().strip();
+    }
+
+    private static String visible(String value) {
+        if (value == null) return "";
+
+        var builder = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\r') builder.append("\\r");
+            else if (c == '\n') builder.append("\\n");
+            else if (c == '\t') builder.append("\\t");
+            else if (c < 0x20 || c == 0x7F || Character.getType(c) == Character.FORMAT) builder.append(String.format("\\u%04X", (int) c));
+            else builder.append(c);
+        }
+        return builder.toString();
+    }
+
+    private void confirmSuccess() {
+        if (currentAttemptName != null) assumeSuccess(currentAttemptName, currentAttemptValue);
     }
 
     private void tryNextName() {
         cancelTimeout();
-        currentNameIndex++;
+        currentAttemptName = null;
+        currentAttemptIndex++;
         sendAttempt();
     }
 
     private void skipInvalidValue() {
         cancelTimeout();
-        LogViewer.system("Invalid value for gamerule '" + currentCanonical + "': " + currentValue);
+        LogViewer.system("Invalid value for gamerule '" + currentCanonical + "': " + currentAttemptValue);
+        currentAttemptName = null;
         scheduleNext();
     }
 
-    private void assumeSuccess(String usedName) {
-        LogViewer.system("Set gamerule '" + usedName + "' = " + currentValue);
+    private void assumeSuccess(String usedName, String usedValue) {
+        if (currentAttemptName == null) return;
+        currentAttemptName = null;
+        LogViewer.system("Set gamerule '" + usedName + "' = " + usedValue);
         scheduleNext();
     }
 
