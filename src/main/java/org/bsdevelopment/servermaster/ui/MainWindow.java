@@ -64,7 +64,7 @@ public final class MainWindow {
         console = new LogViewer();
         LogViewer.registerActive(console);
 
-        ServerOutputListener outputListener = (server, stream, line) -> Platform.runLater(() -> console.appendLine(line));
+        ServerOutputListener outputListener = (server, stream, line) -> console.appendLine(line);
         try {
             serverSelection = new ServerSelectionPane(selection, serverRunning, outputListener, () -> {
                 console.clearConsole();
