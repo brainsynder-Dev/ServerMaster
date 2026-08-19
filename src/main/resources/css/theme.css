@@ -342,6 +342,11 @@
     -fx-padding: 3 9 3 9;
 }
 
+.logo-tile-text {
+    -fx-text-fill: #0B0E14;
+    -fx-font-weight: 700;
+}
+
 .install-status {
     -fx-font-weight: 600;
 }

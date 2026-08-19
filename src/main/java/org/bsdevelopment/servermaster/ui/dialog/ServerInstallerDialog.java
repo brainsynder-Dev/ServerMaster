@@ -209,6 +209,7 @@ public final class ServerInstallerDialog {
             tile.hoverProperty().addListener((obs, wasHover, isHover) -> nameLabel.setVisible(isHover));
         } else {
             tile.setText(displayName(project));
+            tile.getStyleClass().add("logo-tile-text");
         }
 
         return tile;
